@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🎡 Колесо Фортуны</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<h1>🎡 Колесо Фортуны</h1>
+
+<div class="wheel-wrap">
+  <div class="pointer"></div>
+  <canvas id="wheel" width="920" height="920"></canvas>
+  <button class="spin-btn" id="spinBtn">КРУТИТЬ</button>
+</div>
+
+<div class="result-box" id="result"></div>
+
+<!-- Скорость и длительность -->
+<div class="controls">
+  <label>Скорость вращения
+    <input type="range" id="speed" min="1" max="10" value="6">
+  </label>
+  <label>Длительность (сек)
+    <input type="number" id="duration" min="2" max="20" value="6">
+  </label>
+</div>
+
+<!-- Панель вариантов -->
+<div class="options-panel">
+  <h3>✏️ Варианты выпадения</h3>
+  <div id="optionsList"></div>
+  <div class="options-actions">
+    <button class="btn small add" id="addOption">+ Добавить</button>
+    <button class="btn small ghost" id="resetOptions">↺ Сбросить</button>
+  </div>
+</div>
+
+<!-- Секретная кнопка и панель -->
+<div class="secret-toggle" id="secretToggle" title="Секретные настройки">⚙️</div>
+
+<div class="secret-panel" id="secretPanel">
+  <h3>🔮 Секретные настройки</h3>
+  <p class="hint">Подкрутка колеса. Если выбран «Честный режим» — результат случайный.</p>
+
+  <label>Режим подкрутки:</label>
+  <select id="rigMode">
+    <option value="fair">🎲 Честный режим (случайно)</option>
+    <option value="force">🎯 Принудительно выпадет...</option>
+  </select>
+
+  <label>Принудительный результат:</label>
+  <select id="rigTarget"></select>
+
+  <label>Шанс подкрутки:</label>
+  <select id="rigChance">
+    <option value="1">100% — всегда</option>
+    <option value="0.75">75%</option>
+    <option value="0.5">50%</option>
+    <option value="0.25">25%</option>
+    <option value="0.1">10%</option>
+  </select>
+
+  <div class="secret-status off" id="secretStatus">Честный режим активен</div>
+
+  <button class="btn small danger" id="clearRig">Сбросить подкрутку</button>
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>
