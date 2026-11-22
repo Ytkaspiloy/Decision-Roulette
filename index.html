@@ -3,52 +3,100 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>🎡 Колесо Фортуны</title>
+<title>🎡 Колесо Фортуны PRO</title>
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-<h1>🎡 Колесо Фортуны</h1>
+<!-- ============ ШАПКА ============ -->
+<header class="app-header">
+  <div class="logo" id="logo">🎡</div>
+  <h1>Колесо Фортуны <span class="pro">PRO</span></h1>
+  <p class="subtitle">Профессиональный рандомайзер решений</p>
+</header>
 
-<div class="wheel-wrap">
-  <div class="pointer"></div>
-  <canvas id="wheel" width="920" height="920"></canvas>
-  <button class="spin-btn" id="spinBtn">КРУТИТЬ</button>
-</div>
-
-<div class="result-box" id="result"></div>
-
-<!-- Скорость и длительность -->
-<div class="controls">
-  <label>Скорость вращения
-    <input type="range" id="speed" min="1" max="10" value="6">
-  </label>
-  <label>Длительность (сек)
-    <input type="number" id="duration" min="2" max="20" value="6">
-  </label>
-</div>
-
-<!-- Панель вариантов -->
-<div class="options-panel">
-  <h3>✏️ Варианты выпадения</h3>
-  <div id="optionsList"></div>
-  <div class="options-actions">
-    <button class="btn small add" id="addOption">+ Добавить</button>
-    <button class="btn small ghost" id="resetOptions">↺ Сбросить</button>
+<!-- ============ ОСНОВНАЯ СЦЕНА ============ -->
+<main class="stage">
+  <div class="wheel-wrap">
+    <div class="wheel-glow"></div>
+    <div class="pointer">
+      <div class="pointer-tip"></div>
+      <div class="pointer-body"></div>
+    </div>
+    <canvas id="wheel" width="1000" height="1000"></canvas>
+    <button class="spin-btn" id="spinBtn">
+      <span class="spin-label">КРУТИТЬ</span>
+      <span class="spin-ring"></span>
+    </button>
   </div>
-</div>
 
-<!-- Секретная кнопка и панель -->
-<div class="secret-toggle" id="secretToggle" title="Секретные настройки">⚙️</div>
+  <div class="result-box" id="result">
+    <span class="result-placeholder">Нажми «Крутить», чтобы начать</span>
+  </div>
+</main>
 
+<!-- ============ КЛАССИЧЕСКИЕ НАСТРОЙКИ ============ -->
+<section class="classic-settings">
+  <div class="settings-card">
+    <h3>⚡ Параметры вращения</h3>
+    <div class="setting-row">
+      <label>
+        <span>Скорость</span>
+        <input type="range" id="speed" min="1" max="10" value="6">
+        <span class="value-badge" id="speedVal">6</span>
+      </label>
+    </div>
+    <div class="setting-row">
+      <label>
+        <span>Длительность</span>
+        <input type="range" id="duration" min="2" max="15" value="6">
+        <span class="value-badge" id="durationVal">6с</span>
+      </label>
+    </div>
+    <div class="setting-row toggles">
+      <label class="toggle">
+        <input type="checkbox" id="soundToggle" checked>
+        <span class="toggle-box"></span>
+        <span>🔊 Звук</span>
+      </label>
+      <label class="toggle">
+        <input type="checkbox" id="tickToggle" checked>
+        <span class="toggle-box"></span>
+        <span>🎵 Тики</span>
+      </label>
+    </div>
+  </div>
+
+  <div class="settings-card">
+    <h3>🎨 Готовые колёса</h3>
+    <div class="presets" id="presets"></div>
+  </div>
+</section>
+
+<!-- ============ РЕДАКТОР ВАРИАНТОВ ============ -->
+<section class="options-editor">
+  <div class="editor-head">
+    <h3>✏️ Варианты выпадения <span class="counter" id="optCounter">6</span></h3>
+    <div class="editor-actions">
+      <button class="btn small add" id="addOption">+ Добавить</button>
+      <button class="btn small ghost" id="resetOptions">↺ Сброс</button>
+    </div>
+  </div>
+  <div id="optionsList" class="options-list"></div>
+</section>
+
+<!-- ============ СЕКРЕТНАЯ ПАНЕЛЬ (скрытая) ============ -->
 <div class="secret-panel" id="secretPanel">
-  <h3>🔮 Секретные настройки</h3>
-  <p class="hint">Подкрутка колеса. Если выбран «Честный режим» — результат случайный.</p>
+  <div class="secret-head">
+    <h3>🔮 Скрытые настройки</h3>
+    <button class="secret-close" id="secretClose">✕</button>
+  </div>
+  <p class="hint">Подкрутка колеса. Никто, кроме тебя, сюда не попадёт.</p>
 
-  <label>Режим подкрутки:</label>
+  <label>Режим:</label>
   <select id="rigMode">
-    <option value="fair">🎲 Честный режим (случайно)</option>
-    <option value="force">🎯 Принудительно выпадет...</option>
+    <option value="fair">🎲 Честный (случайно)</option>
+    <option value="force">🎯 Принудительно</option>
   </select>
 
   <label>Принудительный результат:</label>
@@ -57,16 +105,20 @@
   <label>Шанс подкрутки:</label>
   <select id="rigChance">
     <option value="1">100% — всегда</option>
+    <option value="0.9">90%</option>
     <option value="0.75">75%</option>
     <option value="0.5">50%</option>
     <option value="0.25">25%</option>
-    <option value="0.1">10%</option>
   </select>
 
-  <div class="secret-status off" id="secretStatus">Честный режим активен</div>
+  <div class="secret-status off" id="secretStatus">Честный режим</div>
 
   <button class="btn small danger" id="clearRig">Сбросить подкрутку</button>
 </div>
+
+<footer class="app-footer">
+  <span>Сделано с 💜 · Web Audio API · Canvas 2D</span>
+</footer>
 
 <script src="script.js"></script>
 </body>
