@@ -1,10 +1,10 @@
 /* =========================================================
-   КОЛЕСО ФОРТУНЫ PRO 6.1
-   Исправлены шансы приватных колёс. Обнуление — только бинарное.
+   КОЛЕСО ФОРТУНЫ PRO 7.0
+   Исправления: временные бусты, работающие мини-игры, VIP-бонусы, темы
    ========================================================= */
 'use strict';
 
-const SAVE_KEY = 'wheel_pro_v61';
+const SAVE_KEY = 'wheel_pro_v7';
 const DEFAULT_PIN = '7351';
 const ADMIN_SESSION_MS = 10 * 60 * 1000;
 
@@ -28,15 +28,10 @@ const DAILY_OPTIONS = [
   { text: '⭐×2', color: '#7ce4ff', sound: 'thunder', anim: 'lightning', type: 'coins', amount: 2000, rare: true },
 ];
 
-/* ============================================================
-   ПРИВАТНЫЕ КОЛЕСА — ИСПРАВЛЕННЫЕ ШАНСЫ
-   Только бинарное обнуляет. Остальные — обычное казино.
-   ============================================================ */
 const PRIVATE_WHEELS = {
-  // ⚡ БИНАРНОЕ — единственное с обнулением
   binary: {
     title: '⚡ Бинарное колесо',
-    desc: 'Удвоит баланс, сохранит или полностью сотрёт ВСЁ. Прокрут бесплатный, но риск огромен!',
+    desc: 'Удвоит баланс, сохранит или полностью сотрёт ВСЁ.',
     cost: 0,
     options: [
       { text: '💀 ВСЁ СГОРАЕТ', color: '#7f1d1d', sound: 'thunder', anim: 'lightning', type: 'wipe', rare: true },
@@ -44,13 +39,9 @@ const PRIVATE_WHEELS = {
       { text: '🔒 СОХРАНЕНО',  color: '#6b7280', sound: 'buzz',    anim: 'shake',     type: 'keep', rare: false },
     ],
   },
-
-  // 💎 ДЖЕКПОТ — 200🪙 за прокрут, фиксированные призы
-  // Средний выигрыш ~1700, но с учётом стоимости ожидание в минус.
-  // Раскладка: 8 секторов, 3 "пусто", 5 призов
   jackpot: {
     title: '💎 Джекпот-рулетка',
-    desc: 'Прокрут 200🪙. Чаще всего — меньше, чем заплатил. Редко — крупный куш.',
+    desc: 'Прокрут 200🪙. Чаще — меньше, чем заплатил. Редко — крупный куш.',
     cost: 200,
     options: [
       { text: '+500🪙',    color: '#84cc16', sound: 'coin',    anim: 'pop',       type: 'coins', amount: 500,   rare: false },
@@ -63,33 +54,17 @@ const PRIVATE_WHEELS = {
       { text: '+10000🪙',  color: '#ffd166', sound: 'thunder', anim: 'lightning', type: 'coins', amount: 10000, rare: true },
     ],
   },
-
-  // 🎰 РИСК-КАЗИНО — 100🪙 за прокрут, 10% шанс выиграть 1000 (шанс 1/10)
-  // Раскладка: 10 секторов, 9 "−100", 1 "+1000"
   risk: {
     title: '🎰 Риск-казино',
-    desc: 'Прокрут 100🪙. 10% шанс выиграть +1000🪙. 90% — потерять ставку.',
+    desc: 'Прокрут 100🪙. 10% шанс выиграть +1000🪙. 90% — потерять.',
     cost: 100,
-    options: [
-      { text: '💀 −100🪙',  color: '#7f1d1d', sound: 'buzz',    anim: 'shake',     type: 'none', rare: false },
-      { text: '💀 −100🪙',  color: '#7f1d1d', sound: 'buzz',    anim: 'shake',     type: 'none', rare: false },
-      { text: '💀 −100🪙',  color: '#7f1d1d', sound: 'buzz',    anim: 'shake',     type: 'none', rare: false },
-      { text: '💀 −100🪙',  color: '#7f1d1d', sound: 'buzz',    anim: 'shake',     type: 'none', rare: false },
-      { text: '💀 −100🪙',  color: '#7f1d1d', sound: 'buzz',    anim: 'shake',     type: 'none', rare: false },
-      { text: '💀 −100🪙',  color: '#7f1d1d', sound: 'buzz',    anim: 'shake',     type: 'none', rare: false },
-      { text: '💀 −100🪙',  color: '#7f1d1d', sound: 'buzz',    anim: 'shake',     type: 'none', rare: false },
-      { text: '💀 −100🪙',  color: '#7f1d1d', sound: 'buzz',    anim: 'shake',     type: 'none', rare: false },
-      { text: '💀 −100🪙',  color: '#7f1d1d', sound: 'buzz',    anim: 'shake',     type: 'none', rare: false },
-      { text: '🎉 +1000🪙', color: '#22c55e', sound: 'thunder', anim: 'lightning', type: 'coins', amount: 1000, rare: true },
-    ],
+    options: Array.from({ length: 10 }, (_, i) => i === 9
+      ? { text: '🎉 +1000🪙', color: '#22c55e', sound: 'thunder', anim: 'lightning', type: 'coins', amount: 1000, rare: true }
+      : { text: '💀 −100🪙', color: '#7f1d1d', sound: 'buzz', anim: 'shake', type: 'none', rare: false }),
   },
-
-  // 🐋 КИТЫ — 10 000🪙 за прокрут
-  // Раскладка: 8 секторов. Средний выигрыш ~8 750 (ниже ставки 10000).
-  // 2×5000 (10000), 1×15000, 1×20000, 1×50000, 3×0
   whale: {
     title: '🐋 Для китов',
-    desc: 'Прокрут 10 000🪙. Чаще теряешь, чем приобретаешь. Но редкий куш — 50 000🪙!',
+    desc: 'Прокрут 10 000🪙. Чаще теряешь. Редкий куш — 50 000🪙.',
     cost: 10000,
     options: [
       { text: '+5 000🪙',   color: '#84cc16', sound: 'coin',    anim: 'pop',       type: 'coins', amount: 5000,  rare: false },
@@ -102,13 +77,9 @@ const PRIVATE_WHEELS = {
       { text: '+50 000🪙',  color: '#ffd166', sound: 'thunder', anim: 'lightning', type: 'coins', amount: 50000, rare: true },
     ],
   },
-
-  // 🌟 ЛЕГЕНДА — 100 000🪙 за прокрут
-  // 8 секторов. Средний выигрыш ~76 250 (ниже 100 000).
-  // 2×50 000 (100 000), 1×100 000, 1×200 000, 1×500 000, 3×0
   legend: {
     title: '🌟 Легенда',
-    desc: 'Прокрут 100 000🪙. Высокие ставки — редкие джекпоты. Осторожно!',
+    desc: 'Прокрут 100 000🪙. Высокие ставки — редкие джекпоты.',
     cost: 100000,
     options: [
       { text: '+50 000🪙',   color: '#84cc16', sound: 'coin',    anim: 'pop',       type: 'coins', amount: 50000,  rare: false },
@@ -153,21 +124,27 @@ const PRESETS = {
   ]},
 };
 
+/* Магазин — теперь с временем действия для бустов и бонусами для особых */
 const SHOP_ITEMS = [
-  { id: 'extra_theme',    icon: '🌈', name: 'Радужная тема',      price: 500,  cat: 'visual' },
-  { id: 'golden_pointer', icon: '⭐', name: 'Золотая стрелка',    price: 300,  cat: 'visual' },
-  { id: 'neon_style',     icon: '⚡', name: 'Неоновый стиль',      price: 350,  cat: 'visual' },
-  { id: 'pastel_style',   icon: '🌸', name: 'Пастельный стиль',   price: 400,  cat: 'visual' },
-  { id: 'mono_style',     icon: '⚫', name: 'Минимализм',         price: 250,  cat: 'visual' },
-  { id: 'rainbow_rivets', icon: '✨', name: 'Радужные заклёпки',  price: 600,  cat: 'visual' },
-  { id: 'confetti',       icon: '🎉', name: 'Конфетти+',          price: 400,  cat: 'boost' },
-  { id: 'double_tick',    icon: '🎵', name: 'Двойные тики',       price: 150,  cat: 'boost' },
-  { id: 'double_daily',   icon: '⏰', name: '2× ежедневные',      price: 800,  cat: 'boost' },
-  { id: 'no_cooldown',    icon: '🔥', name: 'Быстрый кулдаун',    price: 1500, cat: 'boost' },
-  { id: 'lucky_charm',    icon: '🍀', name: 'Талисман удачи',     price: 1000, cat: 'special' },
-  { id: 'thunder_skin',   icon: '⛈️', name: 'Громовая тема',     price: 750,  cat: 'special' },
-  { id: 'golden_frame',   icon: '👑', name: 'Золотая рамка',      price: 2000, cat: 'special' },
-  { id: 'vip_badge',      icon: '💎', name: 'VIP-значок',         price: 5000, cat: 'special' },
+  // Визуальные — постоянные после покупки (но можно убрать)
+  { id: 'extra_theme',    icon: '🌈', name: 'Радужная тема',      price: 500,  cat: 'visual',  type: 'toggle' },
+  { id: 'golden_pointer', icon: '⭐', name: 'Золотая стрелка',    price: 300,  cat: 'visual',  type: 'toggle' },
+  { id: 'neon_style',     icon: '⚡', name: 'Неоновый стиль',      price: 350,  cat: 'visual',  type: 'toggle' },
+  { id: 'pastel_style',   icon: '🌸', name: 'Пастельный стиль',   price: 400,  cat: 'visual',  type: 'toggle' },
+  { id: 'mono_style',     icon: '⚫', name: 'Минимализм',         price: 250,  cat: 'visual',  type: 'toggle' },
+  { id: 'rainbow_rivets', icon: '✨', name: 'Радужные заклёпки',  price: 600,  cat: 'visual',  type: 'toggle' },
+
+  // Бусты — ВРЕМЕННЫЕ, покупаются заново после истечения
+  { id: 'confetti',       icon: '🎉', name: 'Конфетти+',          price: 150,  cat: 'boost',   type: 'timed', duration: 60 * 60 * 1000 },      // 1ч
+  { id: 'double_tick',    icon: '🎵', name: 'Двойные тики',       price: 100,  cat: 'boost',   type: 'timed', duration: 60 * 60 * 1000 },      // 1ч
+  { id: 'double_daily',   icon: '⏰', name: '2× ежедневные',      price: 800,  cat: 'boost',   type: 'timed', duration: 24 * 60 * 60 * 1000 },  // 24ч
+  { id: 'no_cooldown',    icon: '🔥', name: 'Быстрый кулдаун',    price: 1500, cat: 'boost',   type: 'timed', duration: 24 * 60 * 60 * 1000 },  // 24ч
+  { id: 'lucky_charm',    icon: '🍀', name: 'Талисман удачи',     price: 1000, cat: 'boost',   type: 'timed', duration: 60 * 60 * 1000 },      // 1ч: +10% к монетам с ежедневного
+
+  // Особые — постоянные, дают бонусы
+  { id: 'thunder_skin',   icon: '⛈️', name: 'Громовая тема',     price: 750,  cat: 'special', type: 'toggle', bonus: 'Стиль "неон" в подарок' },
+  { id: 'golden_frame',   icon: '👑', name: 'Золотая рамка',      price: 2000, cat: 'special', type: 'toggle', bonus: '+5% к монетам с ежедневного' },
+  { id: 'vip_badge',      icon: '💎', name: 'VIP-статус',         price: 5000, cat: 'special', type: 'vip',    bonus: '+15% к монетам, скидка 20% в магазине' },
 ];
 
 const state = {
@@ -182,6 +159,7 @@ const state = {
   speed: 6, duration: 6,
   offset: 0.35, offsetDisabled: false,
   direction: 'cw', style: 'vibrant', showRivets: true,
+  theme: 'dark',
   soundEnabled: true, tickEnabled: true,
 
   rigMode: 'fair', rigTarget: 0, rigChance: 1,
@@ -192,8 +170,13 @@ const state = {
   balance: 100,
   lastDailySpin: 0,
   dailyCooldown: 24 * 60 * 60 * 1000,
+
+  // purchased — навсегда куплено (визуал, особые)
+  // timed — временные бусты: { id: expiryTime }
+  // applied — активные постоянные (toggle)
   purchased: [],
   applied: [],
+  timed: {},   // { 'confetti': 1234567890 }
 
   surpriseActive: false, surpriseReward: 0,
   editingSectorIndex: -1,
@@ -207,13 +190,59 @@ const state = {
   adminUnlockedUntil: 0, adminFailCount: 0, adminBlockedUntil: 0,
 };
 
+/* Проверка: активен ли буст */
+function isBoostActive(id) {
+  const exp = state.timed[id];
+  return exp && exp > Date.now();
+}
+
+/* Проверка: куплен ли предмет */
+function isOwned(id) {
+  return state.purchased.includes(id);
+}
+
+/* Проверка: применён ли (для toggle) */
+function isApplied(id) {
+  return state.applied.includes(id);
+}
+
+/* Активен ли (для timed) */
+function isTimedActive(id) {
+  return isBoostActive(id);
+}
+
+/* VIP бонус: +15% к монетам */
+function hasVip() {
+  return isOwned('vip_badge');
+}
+
+/* Бонус к ежедневным монетам */
+function dailyCoinBonus(amount) {
+  let bonus = 1;
+  if (hasVip()) bonus += 0.15;
+  if (isApplied('golden_frame')) bonus += 0.05;
+  if (isTimedActive('lucky_charm')) bonus += 0.10;
+  return Math.round(amount * bonus);
+}
+
+/* Скидка в магазине */
+function shopDiscount() {
+  return hasVip() ? 0.20 : 0;
+}
+
+/* Итоговая цена */
+function finalPrice(item) {
+  const disc = shopDiscount();
+  return Math.round(item.price * (1 - disc));
+}
+
 function saveState() {
   try {
     localStorage.setItem(SAVE_KEY, JSON.stringify({
       options: state.options, dailyOptions: state.dailyOptions,
       speed: state.speed, duration: state.duration,
       offset: state.offset, offsetDisabled: state.offsetDisabled,
-      direction: state.direction, style: state.style,
+      direction: state.direction, style: state.style, theme: state.theme,
       showRivets: state.showRivets, soundEnabled: state.soundEnabled,
       tickEnabled: state.tickEnabled,
       rigMode: state.rigMode, rigTarget: state.rigTarget, rigChance: state.rigChance,
@@ -221,7 +250,7 @@ function saveState() {
       gameRigs: state.gameRigs,
       balance: state.balance, lastDailySpin: state.lastDailySpin,
       dailyCooldown: state.dailyCooldown,
-      purchased: state.purchased, applied: state.applied,
+      purchased: state.purchased, applied: state.applied, timed: state.timed,
       stats: state.stats, adminPin: state.adminPin,
     }));
   } catch(e) { console.warn(e); }
@@ -233,7 +262,7 @@ function loadState() {
     if (!raw) return;
     const d = JSON.parse(raw);
     ['speed','duration','offset','direction','style','rigMode','rigTarget','rigChance',
-     'balance','lastDailySpin','dailyCooldown','adminPin','privateRig'].forEach(k => {
+     'balance','lastDailySpin','dailyCooldown','adminPin','privateRig','theme'].forEach(k => {
       if (d[k] !== undefined) state[k] = d[k];
     });
     ['offsetDisabled','showRivets','soundEnabled','tickEnabled'].forEach(k => {
@@ -243,12 +272,14 @@ function loadState() {
     if (Array.isArray(d.dailyOptions) && d.dailyOptions.length >= 2) state.dailyOptions = d.dailyOptions;
     if (Array.isArray(d.purchased)) state.purchased = d.purchased;
     if (Array.isArray(d.applied)) state.applied = d.applied;
+    if (d.timed && typeof d.timed === 'object') state.timed = d.timed;
     if (d.stats) state.stats = { ...state.stats, ...d.stats };
     if (d.privateVisible) state.privateVisible = { ...state.privateVisible, ...d.privateVisible };
     if (d.gameRigs) state.gameRigs = { ...state.gameRigs, ...d.gameRigs };
   } catch(e) { console.warn(e); }
 }
 
+/* Canvas */
 const canvas = document.getElementById('wheel');
 const ctx = canvas.getContext('2d');
 const SIZE = canvas.width;
@@ -504,12 +535,12 @@ function spin() {
   const priv = PRIVATE_WHEELS[state.currentWheel];
   const cost = priv?.cost || 0;
   if (cost > 0 && state.balance < cost) {
-    alert(`Нужно ${cost}🪙 для прокрута`);
+    alert(`Нужно ${cost}🪙`);
     return;
   }
 
   if (state.currentWheel === 'daily') {
-    const effectiveCd = state.purchased.includes('no_cooldown') ? 12 * 60 * 60 * 1000 : state.dailyCooldown;
+    const effectiveCd = isTimedActive('no_cooldown') ? 12 * 60 * 60 * 1000 : state.dailyCooldown;
     const timeLeft = effectiveCd - (Date.now() - state.lastDailySpin);
     if (timeLeft > 0) { alert('Через ' + formatTime(timeLeft)); return; }
   }
@@ -571,7 +602,7 @@ function spin() {
 
 function lockControls(locked) {
   ['speed','duration','addOption','resetOptions','gearBtn','shopBtn',
-   'wheelStyle','direction','showRivets'].forEach(id => {
+   'wheelStyle','direction','showRivets','themeSelect'].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.disabled = locked;
   });
@@ -607,29 +638,28 @@ function finishSpin(index) {
     resultEl.classList.add(animClass);
   }
   if (!opt.rare) sound.playSound(opt.sound || 'fanfare');
-  burstParticles(color, opt.rare ? 60 : 24);
+  burstParticles(color, isTimedActive('confetti') ? 60 : 24);
 }
 
 function applyEffect(opt) {
   const type = opt.type || 'normal';
 
-  // Ежедневное
   if (state.currentWheel === 'daily' && type === 'coins') {
     let amount = opt.amount || 0;
-    if (state.purchased.includes('double_daily') && state.applied.includes('double_daily')) amount *= 2;
+    if (isTimedActive('double_daily')) amount *= 2;
+    amount = dailyCoinBonus(amount);
     addBalance(amount);
     state.stats.coinsEarned += amount;
     state.lastDailySpin = Date.now();
     updateDailyBadge();
   }
 
-  // Приватные — призы в монетах
   if (type === 'coins' && PRIVATE_WHEELS[state.currentWheel]) {
-    addBalance(opt.amount || 0);
-    state.stats.coinsEarned += (opt.amount || 0);
+    let amount = opt.amount || 0;
+    if (hasVip()) amount = Math.round(amount * 1.15);
+    addBalance(amount);
+    state.stats.coinsEarned += amount;
   }
-
-  // Только бинарное может удвоить/обнулить
   if (type === 'double') {
     addBalance(state.balance);
   }
@@ -638,7 +668,6 @@ function applyEffect(opt) {
     updateBalance();
     saveState();
   }
-  // keep, none — ничего
 }
 
 function burstParticles(color, count = 24) {
@@ -691,9 +720,9 @@ function addBalance(amount) {
   saveState();
   updateBalance();
   balanceEl.animate([
-    { transform: 'scale(1)', color: '#ffd166' },
-    { transform: 'scale(1.4)', color: amount > 0 ? '#22c55e' : '#ef4444' },
-    { transform: 'scale(1)', color: '#ffd166' }
+    { transform: 'scale(1)' },
+    { transform: 'scale(1.4)' },
+    { transform: 'scale(1)' }
   ], { duration: 600 });
 }
 function spendBalance(amount) {
@@ -707,16 +736,12 @@ function updateBalance() {
   balanceEl.textContent = state.balance;
   const shopBal = document.getElementById('shopBalance');
   if (shopBal) shopBal.textContent = state.balance;
-  document.querySelectorAll('.shop-item .btn').forEach(btn => {
-    const price = parseInt(btn.dataset.price || '0');
-    if (price > 0) btn.disabled = state.balance < price || btn.dataset.owned === '1';
-  });
 }
 
 const dailyBadge = document.getElementById('dailyBadge');
 const dailyTimerEl = document.getElementById('dailyTimer');
 function updateDailyBadge() {
-  const effectiveCd = state.purchased.includes('no_cooldown') ? 12 * 60 * 60 * 1000 : state.dailyCooldown;
+  const effectiveCd = isTimedActive('no_cooldown') ? 12 * 60 * 60 * 1000 : state.dailyCooldown;
   const timeLeft = effectiveCd - (Date.now() - state.lastDailySpin);
   if (timeLeft > 0) dailyBadge.classList.remove('visible');
   else dailyBadge.classList.add('visible');
@@ -727,8 +752,12 @@ function formatTime(ms) {
   const h = Math.floor(t / 3600), m = Math.floor((t % 3600) / 60), s = t % 60;
   return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
 }
-setInterval(updateDailyBadge, 1000);
+setInterval(() => {
+  updateDailyBadge();
+  if (shopModal?.classList.contains('open')) renderShop();
+}, 1000);
 
+/* ============ ВКЛАДКИ ============ */
 document.querySelectorAll('.tab').forEach(tab => {
   tab.addEventListener('click', () => {
     if (state.spinning) return;
@@ -749,9 +778,7 @@ document.querySelectorAll('.tab').forEach(tab => {
       document.getElementById('privateTitle').textContent = priv.title;
       document.getElementById('privateDesc').textContent = priv.desc;
       document.getElementById('privateCost').innerHTML =
-        priv.cost > 0 ? `Стоимость прокрута: <b>${priv.cost} 🪙</b>` : 'Прокрут <b>бесплатный</b>';
-
-      // Показываем шансы
+        priv.cost > 0 ? `Стоимость: <b>${priv.cost} 🪙</b>` : 'Прокрут <b>бесплатный</b>';
       const stats = document.getElementById('privateStats');
       const counts = {};
       priv.options.forEach(o => { counts[o.text] = (counts[o.text] || 0) + 1; });
@@ -783,6 +810,7 @@ document.querySelectorAll('.game-tab').forEach(tab => {
   });
 });
 
+/* ============ РЕДАКТОР ВАРИАНТОВ ============ */
 const optionsList = document.getElementById('optionsList');
 const optCounter = document.getElementById('optCounter');
 function renderOptions() {
@@ -791,25 +819,19 @@ function renderOptions() {
     const row = document.createElement('div');
     row.className = 'option-row';
     const swatch = document.createElement('input');
-    swatch.type = 'color';
-    swatch.value = opt.color;
-    swatch.className = 'swatch';
+    swatch.type = 'color'; swatch.value = opt.color; swatch.className = 'swatch';
     swatch.addEventListener('input', () => { state.options[i].color = swatch.value; drawWheel(); saveState(); });
     const text = document.createElement('input');
-    text.type = 'text';
-    text.value = opt.text;
-    text.maxLength = 24;
+    text.type = 'text'; text.value = opt.text; text.maxLength = 24;
     text.addEventListener('input', () => {
       state.options[i].text = text.value || ' ';
       drawWheel(); updateRigTargets(); saveState();
     });
     const editBtn = document.createElement('button');
-    editBtn.className = 'icon-btn';
-    editBtn.textContent = opt.rare ? '⚡' : '🎨';
+    editBtn.className = 'icon-btn'; editBtn.textContent = opt.rare ? '⚡' : '🎨';
     editBtn.addEventListener('click', () => openSectorEditor(i));
     const del = document.createElement('button');
-    del.className = 'icon-btn del';
-    del.textContent = '✕';
+    del.className = 'icon-btn del'; del.textContent = '✕';
     del.addEventListener('click', () => {
       if (state.options.length <= 2) { alert('Минимум 2'); return; }
       sound.click();
@@ -890,6 +912,7 @@ function renderPresets() {
   });
 }
 
+/* ============ МАГАЗИН ============ */
 const shopModal = document.getElementById('shopModal');
 const shopGrid = document.getElementById('shopGrid');
 let currentCategory = 'all';
@@ -897,53 +920,92 @@ let currentCategory = 'all';
 function renderShop() {
   shopGrid.innerHTML = '';
   const items = currentCategory === 'all' ? SHOP_ITEMS : SHOP_ITEMS.filter(i => i.cat === currentCategory);
+
   items.forEach(item => {
-    const owned = state.purchased.includes(item.id);
-    const applied = state.applied.includes(item.id);
+    const owned = isOwned(item.id);
+    const applied = isApplied(item.id);
+    const timedActive = isTimedActive(item.id);
+    const price = finalPrice(item);
+
     const card = document.createElement('div');
     card.className = 'shop-item';
     if (owned) card.classList.add('owned');
-    if (applied) card.classList.add('active-item');
-
-    const canToggle = owned && (item.cat === 'visual' || item.cat === 'boost' ||
-      item.id === 'vip_badge' || item.id === 'golden_frame' || item.id === 'thunder_skin' || item.id === 'golden_pointer');
+    if (applied || timedActive) card.classList.add('active-item');
 
     let actionBtn = '';
-    if (!owned) {
-      actionBtn = `<button class="btn add small buy" data-price="${item.price}" data-id="${item.id}">Купить</button>`;
-    } else if (canToggle) {
-      actionBtn = applied
-        ? `<button class="btn remove small toggle-apply" data-id="${item.id}">Убрать</button>`
-        : `<button class="btn apply small toggle-apply" data-id="${item.id}">Применить</button>`;
-    } else {
-      actionBtn = `<button class="btn ghost small" disabled>✓ Куплено</button>`;
+    let durationInfo = '';
+    let timerInfo = '';
+
+    if (item.type === 'timed') {
+      // Временные бусты
+      const dur = item.duration;
+      const durStr = dur >= 24 * 60 * 60 * 1000 ? Math.round(dur / (24 * 60 * 60 * 1000)) + 'ч' : Math.round(dur / (60 * 60 * 1000)) + 'ч';
+      durationInfo = `<div class="shop-item-duration">⏱ ${durStr}</div>`;
+      if (timedActive) {
+        const left = state.timed[item.id] - Date.now();
+        timerInfo = `<div class="shop-item-timer">⏳ ${formatTime(left)}</div>`;
+        actionBtn = `<button class="btn remove small" data-remove-timed="${item.id}">Отменить</button>`;
+      } else {
+        actionBtn = `<button class="btn add small" data-buy="${item.id}" data-price="${price}">Купить ${price}🪙</button>`;
+      }
+    } else if (item.type === 'toggle') {
+      // Постоянные toggle
+      if (!owned) {
+        actionBtn = `<button class="btn add small" data-buy="${item.id}" data-price="${price}">Купить ${price}🪙</button>`;
+      } else {
+        actionBtn = applied
+          ? `<button class="btn remove small" data-toggle="${item.id}">Убрать</button>`
+          : `<button class="btn apply small" data-toggle="${item.id}">Применить</button>`;
+      }
+    } else if (item.type === 'vip') {
+      if (!owned) {
+        actionBtn = `<button class="btn add small" data-buy="${item.id}" data-price="${price}">Купить ${price}🪙</button>`;
+      } else {
+        actionBtn = `<button class="btn ghost small" disabled>✓ VIP активен</button>`;
+      }
     }
 
     card.innerHTML = `
       <div class="shop-item-icon">${item.icon}</div>
       <div class="shop-item-name">${item.name}</div>
-      <div class="shop-item-price">🪙 ${item.price}</div>
+      <div class="shop-item-price">🪙 ${price}${shopDiscount() > 0 ? ` <s style="opacity:.5;font-size:.7rem">${item.price}</s>` : ''}</div>
+      ${durationInfo}
+      ${timerInfo}
+      ${item.bonus ? `<div style="font-size:.65rem;color:var(--accent-3);margin-bottom:6px;">${item.bonus}</div>` : ''}
       ${actionBtn}`;
 
-    card.querySelector('.buy')?.addEventListener('click', () => {
-      if (state.balance < item.price) { alert('Недостаточно монет'); return; }
-      if (!confirm(`Купить «${item.name}» за ${item.price}🪙?`)) return;
-      if (spendBalance(item.price)) {
-        state.purchased.push(item.id);
-        if (item.cat === 'visual' || item.cat === 'boost' ||
-            item.id === 'vip_badge' || item.id === 'golden_frame' ||
-            item.id === 'thunder_skin' || item.id === 'golden_pointer') {
-          state.applied.push(item.id);
-          applyItem(item.id);
+    // Обработчики
+    card.querySelector('[data-buy]')?.addEventListener('click', () => {
+      if (state.balance < price) { alert('Недостаточно монет'); return; }
+      if (!confirm(`Купить «${item.name}» за ${price}🪙?`)) return;
+      if (spendBalance(price)) {
+        if (item.type === 'timed') {
+          state.timed[item.id] = Date.now() + item.duration;
+          sound.playSound('coin');
+        } else {
+          if (!state.purchased.includes(item.id)) state.purchased.push(item.id);
+          if (item.type === 'toggle') {
+            state.applied.push(item.id);
+            applyItem(item.id);
+          }
+          if (item.id === 'vip_badge') {
+            document.getElementById('vipMark').textContent = '💎';
+            sound.playSound('fanfare');
+          }
+          if (item.id === 'thunder_skin') {
+            state.style = 'neon';
+            document.getElementById('wheelStyle').value = 'neon';
+            drawWheel();
+          }
+          sound.playSound('coin');
         }
         saveState();
         renderShop();
         updateBalance();
-        sound.playSound('coin');
       }
     });
 
-    card.querySelector('.toggle-apply')?.addEventListener('click', () => {
+    card.querySelector('[data-toggle]')?.addEventListener('click', () => {
       const idx = state.applied.indexOf(item.id);
       if (idx >= 0) {
         state.applied.splice(idx, 1);
@@ -957,9 +1019,15 @@ function renderShop() {
       sound.click();
     });
 
+    card.querySelector('[data-remove-timed]')?.addEventListener('click', () => {
+      if (!confirm('Отменить буст? Деньги не возвращаются.')) return;
+      delete state.timed[item.id];
+      saveState();
+      renderShop();
+    });
+
     shopGrid.appendChild(card);
   });
-  updateBalance();
 }
 
 document.querySelectorAll('.shop-cat').forEach(btn => {
@@ -982,12 +1050,7 @@ function applyItem(id) {
       break;
     case 'golden_frame': document.querySelector('.wheel-wrap').style.filter = 'drop-shadow(0 0 30px #ffd166)'; break;
     case 'thunder_skin': document.querySelector('.wheel-wrap').style.filter = 'drop-shadow(0 0 20px #7ce4ff)'; break;
-    case 'extra_theme': document.body.style.backgroundImage = 'radial-gradient(circle at 50% 0%, #2a1b4a 0%, transparent 55%), radial-gradient(ellipse at 80% 80%, #1a0a2e 0%, transparent 60%), linear-gradient(160deg, #0a0618 0%, #1a1035 100%)'; break;
-    case 'vip_badge':
-      if (!document.querySelector('.vip-mark')) {
-        document.querySelector('.header h1').insertAdjacentHTML('beforeend', ' <span class="vip-mark" style="color:#7ce4ff;font-size:1rem;">💎</span>');
-      }
-      break;
+    case 'extra_theme': break;
   }
 }
 
@@ -1005,7 +1068,6 @@ function removeItem(id) {
       document.querySelector('.pointer-tip').style.borderTopColor = '#ffd166';
       break;
     case 'golden_frame': case 'thunder_skin': document.querySelector('.wheel-wrap').style.filter = ''; break;
-    case 'vip_badge': document.querySelector('.vip-mark')?.remove(); break;
   }
 }
 
@@ -1018,6 +1080,7 @@ document.getElementById('shopBtn').addEventListener('click', () => {
 document.getElementById('shopClose').addEventListener('click', () => shopModal.classList.remove('open'));
 shopModal.addEventListener('click', (e) => { if (e.target === shopModal) shopModal.classList.remove('open'); });
 
+/* ============ СЮРПРИЗ ============ */
 const surpriseOverlay = document.getElementById('surpriseOverlay');
 function triggerSurprise() {
   if (state.surpriseActive) return;
@@ -1047,11 +1110,18 @@ function scheduleSurprise() {
   }, delay);
 }
 
+/* ============ НАСТРОЙКИ ============ */
 document.getElementById('speed').addEventListener('input', e => { state.speed = +e.target.value; document.getElementById('speedVal').textContent = state.speed; saveState(); });
 document.getElementById('duration').addEventListener('input', e => { state.duration = +e.target.value; document.getElementById('durationVal').textContent = state.duration + 'с'; saveState(); });
 document.getElementById('direction').addEventListener('change', e => { state.direction = e.target.value; saveState(); });
 document.getElementById('wheelStyle').addEventListener('change', e => { state.style = e.target.value; drawWheel(); saveState(); });
 document.getElementById('showRivets').addEventListener('change', e => { state.showRivets = e.target.checked; drawWheel(); saveState(); });
+document.getElementById('themeSelect').addEventListener('change', e => {
+  state.theme = e.target.value;
+  document.body.dataset.theme = state.theme;
+  saveState();
+  sound.click();
+});
 document.getElementById('soundToggle').addEventListener('change', e => {
   sound.enabled = e.target.checked; state.soundEnabled = e.target.checked;
   if (e.target.checked) sound.click(); saveState();
@@ -1082,7 +1152,7 @@ gearBtn.addEventListener('click', () => { if (state.spinning) return; gearPanel.
 document.getElementById('gearClose').addEventListener('click', () => { gearPanel.classList.remove('open'); gearBtn.classList.remove('open'); });
 
 function exportProgress() {
-  const blob = new Blob([JSON.stringify({ version: '6.1', state: JSON.parse(localStorage.getItem(SAVE_KEY) || '{}') }, null, 2)], { type: 'application/json' });
+  const blob = new Blob([JSON.stringify({ version: '7.0', state: JSON.parse(localStorage.getItem(SAVE_KEY) || '{}') }, null, 2)], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url; a.download = `wheel-progress-${Date.now()}.json`; a.click();
@@ -1104,6 +1174,7 @@ document.getElementById('exportBtn').addEventListener('click', exportProgress);
 document.getElementById('importBtn').addEventListener('click', () => document.getElementById('importFile').click());
 document.getElementById('importFile').addEventListener('change', e => { if (e.target.files[0]) importProgress(e.target.files[0]); e.target.value = ''; });
 
+/* ============ PIN ============ */
 const pinModal = document.getElementById('pinModal');
 const pinInput = document.getElementById('pinInput');
 const pinError = document.getElementById('pinError');
@@ -1232,11 +1303,11 @@ document.querySelectorAll('[data-give]').forEach(btn => {
 });
 document.getElementById('adminUnlockAll').addEventListener('click', () => {
   SHOP_ITEMS.forEach(item => { if (!state.purchased.includes(item.id)) state.purchased.push(item.id); });
-  saveState(); alert('Все товары разблокированы'); sound.playSound('fanfare');
+  saveState(); alert('Разблокировано'); sound.playSound('fanfare');
 });
 document.getElementById('adminResetShop').addEventListener('click', () => {
-  if (!confirm('Сбросить покупки?')) return;
-  state.purchased = []; state.applied = []; saveState(); alert('Сброшено');
+  if (!confirm('Сброс покупок?')) return;
+  state.purchased = []; state.applied = []; state.timed = {}; saveState(); alert('Сброшено');
 });
 
 document.getElementById('adminResetDaily').addEventListener('click', () => { state.lastDailySpin = 0; saveState(); updateDailyBadge(); alert('Сброшено'); });
@@ -1333,13 +1404,16 @@ document.getElementById('adminLogout').addEventListener('click', () => {
   state.adminUnlockedUntil = 0; secretPanel.classList.remove('open'); alert('Выход');
 });
 
-/* ===================== МИНИ-ИГРЫ ===================== */
+/* ============ МИНИ-ИГРЫ ============ */
+
+/* Кубик — три варианта */
 const diceDisplay = document.getElementById('diceDisplay');
 const diceResult = document.getElementById('diceResult');
 const diceFaces = ['⚀','⚁','⚂','⚃','⚄','⚅'];
 let dicePlaying = false;
 
 document.getElementById('diceLow').addEventListener('click', () => playDice('low'));
+document.getElementById('diceFour').addEventListener('click', () => playDice('four'));
 document.getElementById('diceHigh').addEventListener('click', () => playDice('high'));
 
 function playDice(bet) {
@@ -1348,19 +1422,22 @@ function playDice(bet) {
   if (amount < 10) { diceResult.textContent = 'Мин. ставка 10🪙'; diceResult.className = 'game-result lose'; return; }
   if (state.balance < amount) { diceResult.textContent = 'Недостаточно монет'; diceResult.className = 'game-result lose'; return; }
 
-  spendBalance(amount);
+  if (!spendBalance(amount)) return;
   dicePlaying = true;
   diceResult.textContent = '';
   diceDisplay.classList.add('rolling');
+  document.querySelectorAll('#diceLow, #diceFour, #diceHigh').forEach(b => b.disabled = true);
 
   const rig = state.gameRigs.dice;
   let roll;
   if (rig === 'win') {
-    const winRolls = bet === 'low' ? [1,2,3] : [5,6];
-    roll = winRolls[Math.floor(Math.random() * winRolls.length)];
+    if (bet === 'low') roll = 1 + Math.floor(Math.random() * 3);
+    else if (bet === 'high') roll = 5 + Math.floor(Math.random() * 2);
+    else roll = 4;
   } else if (rig === 'lose') {
-    const loseRolls = bet === 'low' ? [4,5,6] : [1,2,3,4];
-    roll = loseRolls[Math.floor(Math.random() * loseRolls.length)];
+    if (bet === 'low') roll = 4 + Math.floor(Math.random() * 3);
+    else if (bet === 'high') roll = 1 + Math.floor(Math.random() * 4);
+    else roll = Math.random() < 0.5 ? 1 + Math.floor(Math.random() * 3) : 5 + Math.floor(Math.random() * 2);
   } else {
     roll = 1 + Math.floor(Math.random() * 6);
   }
@@ -1374,24 +1451,30 @@ function playDice(bet) {
       diceDisplay.classList.remove('rolling');
       diceDisplay.textContent = diceFaces[roll - 1];
 
-      const win = (bet === 'low' && roll < 4) || (bet === 'high' && roll > 4);
+      let win = false, payout = 0;
+      if (bet === 'low' && roll < 4) { win = true; payout = amount * 2; }
+      else if (bet === 'high' && roll > 4) { win = true; payout = amount * 2; }
+      else if (bet === 'four' && roll === 4) { win = true; payout = amount * 4; }
+
       if (win) {
-        const payout = Math.round(amount * 1.9);
         addBalance(payout);
         diceResult.textContent = `🎉 Выпало ${roll}. Выиграл ${payout}🪙!`;
         diceResult.className = 'game-result win';
         sound.playSound('coin');
+        if (payout >= amount * 4) triggerLightning();
       } else {
         diceResult.textContent = `💀 Выпало ${roll}. Потерял ${amount}🪙`;
         diceResult.className = 'game-result lose';
         sound.playSound('buzz');
       }
       dicePlaying = false;
+      document.querySelectorAll('#diceLow, #diceFour, #diceHigh').forEach(b => b.disabled = false);
       saveState();
     }
   }, 60);
 }
 
+/* Угадай число */
 const guessGrid = document.getElementById('guessGrid');
 const guessResult = document.getElementById('guessResult');
 let guessPlaying = false;
@@ -1413,7 +1496,7 @@ function playGuess(num) {
   if (amount < 10) { guessResult.textContent = 'Мин. ставка 10🪙'; guessResult.className = 'game-result lose'; return; }
   if (state.balance < amount) { guessResult.textContent = 'Недостаточно монет'; guessResult.className = 'game-result lose'; return; }
 
-  spendBalance(amount);
+  if (!spendBalance(amount)) return;
   guessPlaying = true;
   guessResult.textContent = '';
   document.querySelectorAll('.guess-btn').forEach(b => b.disabled = true);
@@ -1452,6 +1535,7 @@ function playGuess(num) {
   }, 2500);
 }
 
+/* Ракета */
 const rocketMult = document.getElementById('rocketMult');
 const rocketEl = document.getElementById('rocket');
 const rocketResult = document.getElementById('rocketResult');
@@ -1463,13 +1547,14 @@ function playRocket(targetMult) {
   if (amount < 10) { rocketResult.textContent = 'Мин. ставка 10🪙'; rocketResult.className = 'game-result lose'; return; }
   if (state.balance < amount) { rocketResult.textContent = 'Недостаточно монет'; rocketResult.className = 'game-result lose'; return; }
 
-  spendBalance(amount);
+  if (!spendBalance(amount)) return;
   rocketPlaying = true;
   rocketResult.textContent = '';
   rocketMult.classList.remove('exploded');
   rocketEl.style.left = '0%';
   rocketEl.style.opacity = '1';
   rocketEl.classList.remove('exploding');
+  document.querySelectorAll('.rocket-target').forEach(b => b.disabled = true);
 
   const chances = { 1.5: 0.8, 2: 0.6, 3: 0.4, 5: 0.2, 10: 0.08, 25: 0.03 };
   const chance = chances[targetMult] || 0.5;
@@ -1503,6 +1588,7 @@ function playRocket(targetMult) {
         rocketResult.className = 'game-result win';
         sound.playSound('fanfare');
         burstParticles('#ffd166', 30);
+        if (targetMult >= 10) triggerLightning();
       } else {
         rocketMult.textContent = '💥 ВЗРЫВ ×' + currentMult.toFixed(2);
         rocketMult.classList.add('exploded');
@@ -1514,6 +1600,7 @@ function playRocket(targetMult) {
         triggerLightning();
       }
       rocketPlaying = false;
+      document.querySelectorAll('.rocket-target').forEach(b => b.disabled = false);
       saveState();
     }
   }, 50);
@@ -1523,10 +1610,13 @@ document.querySelectorAll('.rocket-target').forEach(btn => {
   btn.addEventListener('click', () => playRocket(parseFloat(btn.dataset.mult)));
 });
 
-/* Инициализация */
+/* ============ ИНИЦИАЛИЗАЦИЯ ============ */
 loadState();
 sound.enabled = state.soundEnabled;
 sound.tickEnabled = state.tickEnabled;
+
+document.body.dataset.theme = state.theme;
+document.getElementById('themeSelect').value = state.theme;
 
 ['binary','jackpot','risk','whale','legend'].forEach(k => {
   const tab = document.querySelector(`.tab[data-wheel="${k}"]`);
@@ -1543,6 +1633,10 @@ updateDailyBadge();
 updateRigTargets();
 drawWheel();
 buildGuessGrid();
+
+if (isOwned('vip_badge')) {
+  document.getElementById('vipMark').textContent = '💎';
+}
 
 document.getElementById('speed').value = state.speed;
 document.getElementById('speedVal').textContent = state.speed;
