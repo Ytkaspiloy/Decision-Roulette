@@ -8,103 +8,222 @@
 </head>
 <body>
 
-<!-- ============ ШАПКА ============ -->
-<header class="app-header">
+<!-- ===================== ШАПКА ===================== -->
+<header class="header">
   <div class="logo" id="logo">🎡</div>
   <h1>Колесо Фортуны <span class="pro">PRO</span></h1>
   <p class="subtitle">Профессиональный рандомайзер решений</p>
+
+  <div class="wallet" id="wallet">
+    <span class="coin">🪙</span>
+    <span class="balance" id="balance">0</span>
+    <button class="wallet-btn" id="shopBtn" title="Магазин">🛒</button>
+  </div>
 </header>
 
-<!-- ============ ОСНОВНАЯ СЦЕНА ============ -->
+<!-- ===================== СЦЕНА ===================== -->
 <main class="stage">
   <div class="wheel-wrap">
     <div class="wheel-glow"></div>
     <div class="pointer">
-      <div class="pointer-tip"></div>
       <div class="pointer-body"></div>
+      <div class="pointer-tip"></div>
     </div>
     <canvas id="wheel" width="1000" height="1000"></canvas>
     <button class="spin-btn" id="spinBtn">
       <span class="spin-label">КРУТИТЬ</span>
-      <span class="spin-ring"></span>
     </button>
   </div>
 
   <div class="result-box" id="result">
     <span class="result-placeholder">Нажми «Крутить», чтобы начать</span>
   </div>
-</main>
 
-<!-- ============ КЛАССИЧЕСКИЕ НАСТРОЙКИ ============ -->
-<section class="classic-settings">
-  <div class="settings-card">
-    <h3>⚡ Параметры вращения</h3>
-    <div class="setting-row">
-      <label>
-        <span>Скорость</span>
+  <!-- Переключатель режимов колеса -->
+  <div class="wheel-tabs">
+    <button class="tab active" data-wheel="main">🎯 Основное</button>
+    <button class="tab" data-wheel="daily">🎁 Ежедневное <span class="tab-badge" id="dailyBadge">!</span></button>
+  </div>
+
+  <!-- Настройки под колесом -->
+  <section class="settings-under" id="mainSettings">
+    <div class="settings-card">
+      <h3>⚡ Вращение</h3>
+      <div class="setting-row">
+        <span class="setting-label">Скорость</span>
         <input type="range" id="speed" min="1" max="10" value="6">
         <span class="value-badge" id="speedVal">6</span>
-      </label>
-    </div>
-    <div class="setting-row">
-      <label>
-        <span>Длительность</span>
+      </div>
+      <div class="setting-row">
+        <span class="setting-label">Длительность</span>
         <input type="range" id="duration" min="2" max="15" value="6">
         <span class="value-badge" id="durationVal">6с</span>
-      </label>
+      </div>
+      <div class="setting-row toggles">
+        <label class="toggle">
+          <input type="checkbox" id="soundToggle" checked>
+          <span class="toggle-box"></span>
+          <span>🔊 Звук</span>
+        </label>
+        <label class="toggle">
+          <input type="checkbox" id="tickToggle" checked>
+          <span class="toggle-box"></span>
+          <span>🎵 Тики</span>
+        </label>
+      </div>
     </div>
-    <div class="setting-row toggles">
-      <label class="toggle">
-        <input type="checkbox" id="soundToggle" checked>
-        <span class="toggle-box"></span>
-        <span>🔊 Звук</span>
-      </label>
-      <label class="toggle">
-        <input type="checkbox" id="tickToggle" checked>
-        <span class="toggle-box"></span>
-        <span>🎵 Тики</span>
-      </label>
+
+    <div class="settings-card">
+      <h3>🎨 Пресеты колёс</h3>
+      <div class="presets" id="presets"></div>
     </div>
+
+    <div class="settings-card wide">
+      <div class="editor-head">
+        <h3>✏️ Варианты выпадения <span class="counter" id="optCounter">6</span></h3>
+        <div class="editor-actions">
+          <button class="btn small add" id="addOption">+ Добавить</button>
+          <button class="btn small ghost" id="resetOptions">↺ Сброс</button>
+        </div>
+      </div>
+      <div id="optionsList" class="options-list"></div>
+    </div>
+  </section>
+
+  <!-- Панель ежедневного колеса -->
+  <section class="settings-under hidden" id="dailySettings">
+    <div class="settings-card wide daily-info">
+      <h3>🎁 Ежедневное колесо</h3>
+      <p class="daily-desc">Один бесплатный прокрут в день. Призы — монеты 🪙 для магазина.</p>
+      <p class="daily-timer">Следующий прокрут через <b id="dailyTimer">—</b></p>
+    </div>
+    <div class="settings-card wide">
+      <h3>💰 Содержимое ежедневного колеса</h3>
+      <div id="dailyList" class="options-list"></div>
+    </div>
+  </section>
+</main>
+
+<!-- ===================== ШЕСТЕРЁНКА (доп. настройки) ===================== -->
+<button class="gear-btn" id="gearBtn" title="Дополнительные настройки">⚙️</button>
+
+<div class="gear-panel" id="gearPanel">
+  <div class="panel-head">
+    <h3>⚙️ Дополнительно</h3>
+    <button class="panel-close" id="gearClose">✕</button>
   </div>
 
-  <div class="settings-card">
-    <h3>🎨 Готовые колёса</h3>
-    <div class="presets" id="presets"></div>
+  <label class="panel-label">Смещение остановки от центра сектора</label>
+  <div class="setting-row">
+    <input type="range" id="offsetRange" min="0" max="90" value="35">
+    <span class="value-badge" id="offsetVal">35%</span>
   </div>
-</section>
+  <p class="panel-hint">0% — строго по центру, 90% — почти на границе.</p>
 
-<!-- ============ РЕДАКТОР ВАРИАНТОВ ============ -->
-<section class="options-editor">
-  <div class="editor-head">
-    <h3>✏️ Варианты выпадения <span class="counter" id="optCounter">6</span></h3>
-    <div class="editor-actions">
-      <button class="btn small add" id="addOption">+ Добавить</button>
-      <button class="btn small ghost" id="resetOptions">↺ Сброс</button>
+  <label class="panel-label">Направление вращения</label>
+  <select id="direction">
+    <option value="cw">↻ По часовой</option>
+    <option value="ccw">↺ Против часовой</option>
+  </select>
+
+  <label class="panel-label">Стиль колеса</label>
+  <select id="wheelStyle">
+    <option value="vibrant">Яркий</option>
+    <option value="pastel">Пастельный</option>
+    <option value="neon">Неон</option>
+    <option value="mono">Минимализм</option>
+  </select>
+
+  <label class="toggle" style="margin-top:12px;">
+    <input type="checkbox" id="showRivets" checked>
+    <span class="toggle-box"></span>
+    <span>Декоративные заклёпки</span>
+  </label>
+</div>
+
+<!-- ===================== МАГАЗИН ===================== -->
+<div class="modal-overlay" id="shopModal">
+  <div class="modal">
+    <div class="panel-head">
+      <h3>🛒 Магазин</h3>
+      <button class="panel-close" id="shopClose">✕</button>
+    </div>
+    <p class="shop-balance">Баланс: <span class="coin">🪙</span> <b id="shopBalance">0</b></p>
+    <div class="shop-grid" id="shopGrid"></div>
+  </div>
+</div>
+
+<!-- ===================== РЕДАКТОР ЗВУКА/АНИМАЦИИ СЕКТОРА ===================== -->
+<div class="modal-overlay" id="sectorModal">
+  <div class="modal">
+    <div class="panel-head">
+      <h3>🎨 Настройка сектора</h3>
+      <button class="panel-close" id="sectorClose">✕</button>
+    </div>
+    <label class="panel-label">Текст сектора</label>
+    <input type="text" id="sectorText" class="modal-input" maxlength="24">
+
+    <label class="panel-label">Цвет</label>
+    <input type="color" id="sectorColor" class="modal-color">
+
+    <label class="panel-label">Звук выпадения</label>
+    <select id="sectorSound">
+      <option value="fanfare">🎺 Фанфары (победный)</option>
+      <option value="coin">🪙 Звон монет</option>
+      <option value="sparkle">✨ Искры (высокий)</option>
+      <option value="drum">🥁 Барабан</option>
+      <option value="buzz">😵 Проигрыш (низкий)</option>
+      <option value="chime">🔔 Колокольчик</option>
+      <option value="laser">⚡ Лазер</option>
+    </select>
+
+    <label class="panel-label">Анимация выпадения</label>
+    <select id="sectorAnim">
+      <option value="pop">🎈 Pop (масштаб)</option>
+      <option value="shake">🫨 Shake (тряска)</option>
+      <option value="bounce">🏀 Bounce (прыжок)</option>
+      <option value="spin">🌀 Spin (вращение)</option>
+      <option value="glow">💡 Glow (свечение)</option>
+      <option value="none">❌ Без анимации</option>
+    </select>
+
+    <div class="modal-actions">
+      <button class="btn add" id="sectorSave">💾 Сохранить</button>
+      <button class="btn ghost" id="sectorCancel">Отмена</button>
     </div>
   </div>
-  <div id="optionsList" class="options-list"></div>
-</section>
+</div>
 
-<!-- ============ СЕКРЕТНАЯ ПАНЕЛЬ (скрытая) ============ -->
+<!-- ===================== МОДАЛКА СЮРПРИЗА ===================== -->
+<div class="surprise-overlay" id="surpriseOverlay">
+  <div class="surprise-box">
+    <div class="surprise-icon">🎁</div>
+    <h2>Сюрприз!</h2>
+    <p class="surprise-text" id="surpriseText">Нажми, чтобы получить награду</p>
+    <button class="btn add" id="surpriseClaim" style="font-size:1.1rem;padding:14px 32px;">Забрать 🎉</button>
+  </div>
+</div>
+
+<!-- ===================== СЕКРЕТНАЯ ПАНЕЛЬ ===================== -->
 <div class="secret-panel" id="secretPanel">
-  <div class="secret-head">
+  <div class="panel-head">
     <h3>🔮 Скрытые настройки</h3>
-    <button class="secret-close" id="secretClose">✕</button>
+    <button class="panel-close" id="secretClose">✕</button>
   </div>
-  <p class="hint">Подкрутка колеса. Никто, кроме тебя, сюда не попадёт.</p>
+  <p class="panel-hint">Подкрутка колеса. Доступ только у создателя.</p>
 
-  <label>Режим:</label>
+  <label class="panel-label">Режим:</label>
   <select id="rigMode">
-    <option value="fair">🎲 Честный (случайно)</option>
+    <option value="fair">🎲 Честный</option>
     <option value="force">🎯 Принудительно</option>
   </select>
 
-  <label>Принудительный результат:</label>
+  <label class="panel-label">Результат:</label>
   <select id="rigTarget"></select>
 
-  <label>Шанс подкрутки:</label>
+  <label class="panel-label">Шанс:</label>
   <select id="rigChance">
-    <option value="1">100% — всегда</option>
+    <option value="1">100%</option>
     <option value="0.9">90%</option>
     <option value="0.75">75%</option>
     <option value="0.5">50%</option>
@@ -113,12 +232,24 @@
 
   <div class="secret-status off" id="secretStatus">Честный режим</div>
 
-  <button class="btn small danger" id="clearRig">Сбросить подкрутку</button>
+  <hr style="border:none;border-top:1px solid rgba(255,255,255,.1);margin:14px 0;">
+
+  <label class="panel-label">🪙 Выдать монет</label>
+  <div style="display:flex;gap:6px;">
+    <input type="number" id="adminCoins" value="1000" min="0" class="modal-input" style="flex:1;">
+    <button class="btn small add" id="adminGiveCoins">Дать</button>
+  </div>
+
+  <label class="panel-label">🎁 Запустить сюрприз сейчас</label>
+  <button class="btn small" id="adminSurprise" style="width:100%;background:linear-gradient(135deg,#f59e0b,#ef4444);">Запустить сюрприз</button>
+
+  <label class="panel-label">🔄 Сбросить ежедневный кулдаун</label>
+  <button class="btn small ghost" id="adminResetDaily" style="width:100%;">Сбросить</button>
+
+  <button class="btn small danger" id="clearRig" style="width:100%;margin-top:14px;">Сбросить подкрутку</button>
 </div>
 
-<footer class="app-footer">
-  <span>Сделано с 💜 · Web Audio API · Canvas 2D</span>
-</footer>
+<footer class="footer">Сделано с 💜 · Web Audio API · Canvas 2D</footer>
 
 <script src="script.js"></script>
 </body>
