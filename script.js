@@ -1,33 +1,73 @@
 /* =========================================================
-   КОЛЕСО ФОРТУНЫ PRO 4.0
-   С полным сохранением, статистикой и продвинутой админкой
+   КОЛЕСО ФОРТУНЫ PRO 5.0
+   Приватные колёса + редкие дропы с молнией
    ========================================================= */
 'use strict';
 
 /* ===================== КОНСТАНТЫ ===================== */
-const SAVE_KEY = 'wheel_pro_v4';
+const SAVE_KEY = 'wheel_pro_v5';
 const DEFAULT_PIN = '7351';
-const ADMIN_SESSION_MS = 10 * 60 * 1000; // 10 минут
+const ADMIN_SESSION_MS = 10 * 60 * 1000;
 
 const DEFAULT_OPTIONS = [
-  { text: 'Да',        color: '#22c55e', sound: 'fanfare', anim: 'pop',    type: 'normal' },
-  { text: 'Нет',       color: '#ef4444', sound: 'buzz',    anim: 'shake',  type: 'normal' },
-  { text: 'Возможно',  color: '#f59e0b', sound: 'chime',   anim: 'bounce', type: 'normal' },
-  { text: 'Точно да',  color: '#06b6d4', sound: 'sparkle', anim: 'glow',   type: 'normal' },
-  { text: 'Точно нет', color: '#a855f7', sound: 'buzz',    anim: 'shake',  type: 'normal' },
-  { text: 'Повезёт',   color: '#ec4899', sound: 'fanfare', anim: 'spin',   type: 'normal' },
+  { text: 'Да',        color: '#22c55e', sound: 'fanfare', anim: 'pop',    type: 'normal', rare: false },
+  { text: 'Нет',       color: '#ef4444', sound: 'buzz',    anim: 'shake',  type: 'normal', rare: false },
+  { text: 'Возможно',  color: '#f59e0b', sound: 'chime',   anim: 'bounce', type: 'normal', rare: false },
+  { text: 'Точно да',  color: '#06b6d4', sound: 'sparkle', anim: 'glow',   type: 'normal', rare: false },
+  { text: 'Точно нет', color: '#a855f7', sound: 'buzz',    anim: 'shake',  type: 'normal', rare: false },
+  { text: 'Повезёт',   color: '#ec4899', sound: 'fanfare', anim: 'spin',   type: 'normal', rare: false },
 ];
 
+/* Улучшенное ежедневное — теперь призы ЛУЧШЕ сюрпризов */
 const DAILY_OPTIONS = [
-  { text: '10🪙',  color: '#22c55e', sound: 'coin',    anim: 'pop',    type: 'coins', amount: 10  },
-  { text: '25🪙',  color: '#06b6d4', sound: 'coin',    anim: 'bounce', type: 'coins', amount: 25  },
-  { text: '50🪙',  color: '#f59e0b', sound: 'coin',    anim: 'glow',   type: 'coins', amount: 50  },
-  { text: '100🪙', color: '#ec4899', sound: 'sparkle', anim: 'spin',   type: 'coins', amount: 100 },
-  { text: '5🪙',   color: '#6b7280', sound: 'buzz',    anim: 'shake',  type: 'coins', amount: 5   },
-  { text: '15🪙',  color: '#84cc16', sound: 'coin',    anim: 'pop',    type: 'coins', amount: 15  },
-  { text: '30🪙',  color: '#a855f7', sound: 'coin',    anim: 'bounce', type: 'coins', amount: 30  },
-  { text: '75🪙',  color: '#ffd166', sound: 'chime',   anim: 'glow',   type: 'coins', amount: 75  },
+  { text: '150🪙', color: '#22c55e', sound: 'coin',    anim: 'bounce', type: 'coins', amount: 150, rare: false },
+  { text: '200🪙', color: '#06b6d4', sound: 'coin',    anim: 'glow',   type: 'coins', amount: 200, rare: false },
+  { text: '300🪙', color: '#f59e0b', sound: 'sparkle', anim: 'spin',   type: 'coins', amount: 300, rare: false },
+  { text: '500🪙', color: '#ec4899', sound: 'fanfare', anim: 'pop',    type: 'coins', amount: 500, rare: false },
+  { text: '100🪙', color: '#84cc16', sound: 'coin',    anim: 'pop',    type: 'coins', amount: 100, rare: false },
+  { text: '750🪙', color: '#a855f7', sound: 'chime',   anim: 'bounce', type: 'coins', amount: 750, rare: false },
+  { text: '1000🪙', color: '#ffd166', sound: 'fanfare', anim: 'glow',  type: 'coins', amount: 1000, rare: false },
+  { text: '⭐×2', color: '#7ce4ff', sound: 'thunder', anim: 'lightning', type: 'coins', amount: 2000, rare: true },
 ];
+
+/* Приватные колёса — НЕЛЬЗЯ ИЗМЕНИТЬ */
+const PRIVATE_WHEELS = {
+  binary: {
+    title: '⚡ Бинарное колесо',
+    desc: 'Либо удвоит баланс, либо сохранит, либо полностью сотрёт. Рискни всем!',
+    options: [
+      { text: '💀 ВСЁ СГОРАЕТ', color: '#7f1d1d', sound: 'thunder', anim: 'lightning', type: 'binary_wipe', rare: true },
+      { text: '×2 БАЛАНС',     color: '#22c55e', sound: 'fanfare', anim: 'glow',      type: 'binary_double', rare: false },
+      { text: '🔒 СОХРАНЕНО',  color: '#6b7280', sound: 'buzz',    anim: 'shake',     type: 'binary_keep', rare: false },
+    ],
+  },
+  jackpot: {
+    title: '💎 Джекпот-рулетка',
+    desc: 'Шанс умножить баланс на 2, 5 или 10. Или ничего не получить.',
+    options: [
+      { text: '×10 ДЖЕКПОТ',  color: '#ffd166', sound: 'thunder', anim: 'lightning', type: 'jackpot_10', rare: true },
+      { text: '×5',           color: '#ec4899', sound: 'fanfare', anim: 'glow',      type: 'jackpot_5',  rare: false },
+      { text: '×2',           color: '#06b6d4', sound: 'sparkle', anim: 'bounce',    type: 'jackpot_2',  rare: false },
+      { text: 'Пусто',        color: '#6b7280', sound: 'buzz',    anim: 'shake',     type: 'jackpot_0',  rare: false },
+      { text: 'Пусто',        color: '#6b7280', sound: 'buzz',    anim: 'shake',     type: 'jackpot_0',  rare: false },
+      { text: '×3',           color: '#a855f7', sound: 'chime',   anim: 'spin',      type: 'jackpot_3',  rare: false },
+    ],
+  },
+  risk: {
+    title: '🎰 Риск-казино',
+    desc: 'Ставка 100🪙. Выиграешь — получишь ×3 (300🪙). Проиграешь — потеряешь ставку.',
+    options: [
+      { text: '🎉 ×3',      color: '#22c55e', sound: 'fanfare', anim: 'glow',      type: 'risk_win',  rare: false },
+      { text: '💀 −100🪙',  color: '#7f1d1d', sound: 'buzz',    anim: 'shake',     type: 'risk_lose', rare: false },
+      { text: '🎉 ×3',      color: '#22c55e', sound: 'chime',   anim: 'bounce',    type: 'risk_win',  rare: false },
+      { text: '💀 −100🪙',  color: '#7f1d1d', sound: 'buzz',    anim: 'shake',     type: 'risk_lose', rare: false },
+      { text: '🎉 ×5',      color: '#ffd166', sound: 'thunder', anim: 'lightning', type: 'risk_big',  rare: true },
+      { text: '💀 −100🪙',  color: '#7f1d1d', sound: 'buzz',    anim: 'shake',     type: 'risk_lose', rare: false },
+    ],
+  },
+};
+
+const RISK_BET = 100;
 
 const PRESETS = {
   'yes-no': { name: 'Да / Нет', emoji: '⚖️', options: [
@@ -68,13 +108,26 @@ const PRESETS = {
   ]},
 };
 
+/* Расширенный магазин — 15 предметов */
 const SHOP_ITEMS = [
-  { id: 'extra_theme',    icon: '🌈', name: 'Радужная тема',    price: 500 },
-  { id: 'golden_pointer', icon: '⭐', name: 'Золотая стрелка',  price: 300 },
-  { id: 'extra_life',     icon: '💫', name: 'Скидка 10%',       price: 200 },
-  { id: 'double_tick',    icon: '🎵', name: 'Двойные тики',     price: 150 },
-  { id: 'confetti',       icon: '🎉', name: 'Конфетти+',        price: 400 },
-  { id: 'neon_style',     icon: '⚡', name: 'Неоновый стиль',    price: 350 },
+  // Визуальные
+  { id: 'extra_theme',    icon: '🌈', name: 'Радужная тема',      price: 500,  cat: 'visual' },
+  { id: 'golden_pointer', icon: '⭐', name: 'Золотая стрелка',    price: 300,  cat: 'visual' },
+  { id: 'neon_style',     icon: '⚡', name: 'Неоновый стиль',      price: 350,  cat: 'visual' },
+  { id: 'pastel_style',   icon: '🌸', name: 'Пастельный стиль',   price: 400,  cat: 'visual' },
+  { id: 'mono_style',     icon: '⚫', name: 'Минимализм',         price: 250,  cat: 'visual' },
+  { id: 'rainbow_rivets', icon: '✨', name: 'Радужные заклёпки',  price: 600,  cat: 'visual' },
+  // Бусты
+  { id: 'confetti',       icon: '🎉', name: 'Конфетти+',          price: 400,  cat: 'boost' },
+  { id: 'double_tick',    icon: '🎵', name: 'Двойные тики',       price: 150,  cat: 'boost' },
+  { id: 'double_daily',   icon: '⏰', name: '2× ежедневные',      price: 800,  cat: 'boost' },
+  { id: 'extra_life',     icon: '💫', name: 'Скидка 10%',         price: 200,  cat: 'boost' },
+  { id: 'no_cooldown',    icon: '🔥', name: 'Быстрый кулдаун (12ч)', price: 1500, cat: 'boost' },
+  // Особые
+  { id: 'lucky_charm',    icon: '🍀', name: 'Талисман удачи',     price: 1000, cat: 'special' },
+  { id: 'thunder_skin',   icon: '⛈️', name: 'Громовая тема',     price: 750,  cat: 'special' },
+  { id: 'golden_frame',   icon: '👑', name: 'Золотая рамка',      price: 2000, cat: 'special' },
+  { id: 'vip_badge',      icon: '💎', name: 'VIP-значок',         price: 5000, cat: 'special' },
 ];
 
 /* ===================== СОСТОЯНИЕ ===================== */
@@ -89,6 +142,7 @@ const state = {
   speed: 6,
   duration: 6,
   offset: 0.35,
+  offsetDisabled: false,   // ← если true, стрелка всегда в центре
   direction: 'cw',
   style: 'vibrant',
   showRivets: true,
@@ -98,6 +152,9 @@ const state = {
   rigMode: 'fair',
   rigTarget: 0,
   rigChance: 1,
+
+  privateRig: 'fair',   // fair | win | lose
+  privateVisible: { binary: true, jackpot: true, risk: true },
 
   balance: 100,
   lastDailySpin: 0,
@@ -109,16 +166,16 @@ const state = {
 
   editingSectorIndex: -1,
 
-  // Статистика
   stats: {
     totalSpins: 0,
     dailySpins: 0,
+    privateSpins: 0,
     coinsEarned: 0,
     surprises: 0,
-    results: {}, // text -> count
+    rareHits: 0,
+    results: {},
   },
 
-  // Админка
   adminPin: DEFAULT_PIN,
   adminUnlockedUntil: 0,
   adminFailCount: 0,
@@ -128,27 +185,21 @@ const state = {
 /* ===================== СОХРАНЕНИЕ ===================== */
 function saveState() {
   try {
-    const data = {
+    localStorage.setItem(SAVE_KEY, JSON.stringify({
       options: state.options,
       dailyOptions: state.dailyOptions,
-      speed: state.speed,
-      duration: state.duration,
-      offset: state.offset,
-      direction: state.direction,
-      style: state.style,
-      showRivets: state.showRivets,
-      soundEnabled: state.soundEnabled,
+      speed: state.speed, duration: state.duration,
+      offset: state.offset, offsetDisabled: state.offsetDisabled,
+      direction: state.direction, style: state.style,
+      showRivets: state.showRivets, soundEnabled: state.soundEnabled,
       tickEnabled: state.tickEnabled,
-      rigMode: state.rigMode,
-      rigTarget: state.rigTarget,
-      rigChance: state.rigChance,
-      balance: state.balance,
-      lastDailySpin: state.lastDailySpin,
-      purchased: state.purchased,
-      stats: state.stats,
-      adminPin: state.adminPin,
-    };
-    localStorage.setItem(SAVE_KEY, JSON.stringify(data));
+      rigMode: state.rigMode, rigTarget: state.rigTarget, rigChance: state.rigChance,
+      privateRig: state.privateRig,
+      privateVisible: state.privateVisible,
+      balance: state.balance, lastDailySpin: state.lastDailySpin,
+      dailyCooldown: state.dailyCooldown,
+      purchased: state.purchased, stats: state.stats, adminPin: state.adminPin,
+    }));
   } catch(e) { console.warn('Save failed', e); }
 }
 
@@ -157,24 +208,17 @@ function loadState() {
     const raw = localStorage.getItem(SAVE_KEY);
     if (!raw) return;
     const d = JSON.parse(raw);
+    const copyKeys = ['speed','duration','offset','direction','style','rigMode','rigTarget',
+                      'rigChance','balance','lastDailySpin','dailyCooldown','adminPin','privateRig'];
+    copyKeys.forEach(k => { if (d[k] !== undefined) state[k] = d[k]; });
+    ['offsetDisabled','showRivets','soundEnabled','tickEnabled'].forEach(k => {
+      if (typeof d[k] === 'boolean') state[k] = d[k];
+    });
     if (Array.isArray(d.options) && d.options.length >= 2) state.options = d.options;
     if (Array.isArray(d.dailyOptions) && d.dailyOptions.length >= 2) state.dailyOptions = d.dailyOptions;
-    if (typeof d.speed === 'number') state.speed = d.speed;
-    if (typeof d.duration === 'number') state.duration = d.duration;
-    if (typeof d.offset === 'number') state.offset = d.offset;
-    if (typeof d.direction === 'string') state.direction = d.direction;
-    if (typeof d.style === 'string') state.style = d.style;
-    if (typeof d.showRivets === 'boolean') state.showRivets = d.showRivets;
-    if (typeof d.soundEnabled === 'boolean') state.soundEnabled = d.soundEnabled;
-    if (typeof d.tickEnabled === 'boolean') state.tickEnabled = d.tickEnabled;
-    if (typeof d.rigMode === 'string') state.rigMode = d.rigMode;
-    if (typeof d.rigTarget === 'number') state.rigTarget = d.rigTarget;
-    if (typeof d.rigChance === 'number') state.rigChance = d.rigChance;
-    if (typeof d.balance === 'number') state.balance = d.balance;
-    if (typeof d.lastDailySpin === 'number') state.lastDailySpin = d.lastDailySpin;
     if (Array.isArray(d.purchased)) state.purchased = d.purchased;
-    if (d.stats && typeof d.stats === 'object') state.stats = { ...state.stats, ...d.stats };
-    if (typeof d.adminPin === 'string') state.adminPin = d.adminPin;
+    if (d.stats) state.stats = { ...state.stats, ...d.stats };
+    if (d.privateVisible) state.privateVisible = { ...state.privateVisible, ...d.privateVisible };
   } catch(e) { console.warn('Load failed', e); }
 }
 
@@ -228,7 +272,10 @@ function grayscale(hex) {
 }
 
 function getCurrentOptions() {
-  return state.currentWheel === 'daily' ? state.dailyOptions : state.options;
+  if (state.currentWheel === 'main') return state.options;
+  if (state.currentWheel === 'daily') return state.dailyOptions;
+  const priv = PRIVATE_WHEELS[state.currentWheel];
+  return priv ? priv.options : state.options;
 }
 
 function drawWheel() {
@@ -287,16 +334,17 @@ function drawWheel() {
     ctx.fillRect(0, 0, SIZE, SIZE);
     ctx.restore();
 
+    // Текст
     ctx.save();
     ctx.translate(CENTER, CENTER);
     ctx.rotate(start + arc / 2);
     ctx.textAlign = 'right';
     ctx.textBaseline = 'middle';
-    ctx.fillStyle = style.text;
+    ctx.fillStyle = opts[i].rare ? '#ffd166' : style.text;
     const fs = Math.max(18, Math.min(36, 560 / n));
     ctx.font = `800 ${fs}px 'Segoe UI', sans-serif`;
-    ctx.shadowColor = 'rgba(0,0,0,.8)';
-    ctx.shadowBlur = 8;
+    ctx.shadowColor = opts[i].rare ? '#ffd166' : 'rgba(0,0,0,.8)';
+    ctx.shadowBlur = opts[i].rare ? 16 : 8;
     ctx.shadowOffsetY = 2;
     const label = opts[i].text.length > 18 ? opts[i].text.slice(0, 17) + '…' : opts[i].text;
     ctx.fillText(label, RADIUS - 30, 0);
@@ -364,6 +412,24 @@ class SoundEngine {
     osc.start(t);
     osc.stop(t + dur + 0.05);
   }
+  _playNoise(dur, vol, filterFreq = 1000) {
+    if (!this.ctx) return;
+    const t = this.ctx.currentTime;
+    const bufSize = this.ctx.sampleRate * dur;
+    const buffer = this.ctx.createBuffer(1, bufSize, this.ctx.sampleRate);
+    const data = buffer.getChannelData(0);
+    for (let i = 0; i < bufSize; i++) data[i] = Math.random() * 2 - 1;
+    const noise = this.ctx.createBufferSource();
+    noise.buffer = buffer;
+    const filter = this.ctx.createBiquadFilter();
+    filter.type = 'lowpass';
+    filter.frequency.value = filterFreq;
+    const gain = this.ctx.createGain();
+    gain.gain.setValueAtTime(vol, t);
+    gain.gain.exponentialRampToValueAtTime(0.001, t + dur);
+    noise.connect(filter).connect(gain).connect(this.ctx.destination);
+    noise.start(t);
+  }
   tick() {
     if (!this.enabled || !this.tickEnabled) return;
     this.init(); this.resume();
@@ -375,11 +441,28 @@ class SoundEngine {
   }
   whoosh() { if (!this.enabled) return; this.init(); this.resume(); this._playOsc(80, 'sawtooth', 0.5, 0.06, 0, 400); }
   click() { if (!this.enabled) return; this.init(); this.resume(); this._playOsc(800, 'sine', 0.08, 0.07, 0, 400); }
+
+  thunder() {
+    if (!this.enabled) return;
+    this.init(); this.resume();
+    if (!this.ctx) return;
+    // Мощный удар: низкий бас + шум + громыхание
+    this._playOsc(60, 'sawtooth', 0.8, 0.25, 0, 30);
+    this._playOsc(45, 'square', 1.2, 0.18, 0.1, 20);
+    this._playNoise(1.5, 0.35, 800);
+    // Громыхание после
+    setTimeout(() => this._playNoise(2.0, 0.15, 300), 400);
+    setTimeout(() => this._playNoise(1.5, 0.1, 200), 900);
+    // Высокий треск
+    this._playOsc(2500, 'sawtooth', 0.15, 0.12, 0, 800);
+  }
+
   playSound(name) {
     if (!this.enabled) return;
     this.init(); this.resume();
     if (!this.ctx) return;
     switch (name) {
+      case 'thunder': this.thunder(); break;
       case 'fanfare': {
         [523.25, 659.25, 783.99, 1046.5].forEach((f, i) => this._playOsc(f, 'triangle', 0.35, 0.11, i * 0.09));
         break;
@@ -415,6 +498,19 @@ class SoundEngine {
 }
 const sound = new SoundEngine();
 
+/* ===================== МОЛНИЯ ===================== */
+const lightningOverlay = document.getElementById('lightningOverlay');
+
+function triggerLightning() {
+  lightningOverlay.classList.add('active');
+  document.body.classList.add('screen-shake');
+  sound.thunder();
+  setTimeout(() => {
+    lightningOverlay.classList.remove('active');
+    document.body.classList.remove('screen-shake');
+  }, 1200);
+}
+
 /* ===================== ВРАЩЕНИЕ ===================== */
 const spinBtn = document.getElementById('spinBtn');
 const resultEl = document.getElementById('result');
@@ -426,12 +522,20 @@ function spin() {
   const opts = getCurrentOptions();
   if (opts.length === 0) return;
 
+  // Кулдаун ежедневного
   if (state.currentWheel === 'daily') {
-    const timeLeft = state.dailyCooldown - (Date.now() - state.lastDailySpin);
+    const effectiveCooldown = state.purchased.includes('no_cooldown') ? 12 * 60 * 60 * 1000 : state.dailyCooldown;
+    const timeLeft = effectiveCooldown - (Date.now() - state.lastDailySpin);
     if (timeLeft > 0) {
       alert('Ежедневное колесо доступно через ' + formatTime(timeLeft));
       return;
     }
+  }
+
+  // Ставка на риск-казино
+  if (state.currentWheel === 'risk' && state.balance < RISK_BET) {
+    alert(`Нужно минимум ${RISK_BET}🪙 для игры в риск-казино`);
+    return;
   }
 
   state.spinning = true;
@@ -446,7 +550,9 @@ function spin() {
   const targetIndex = getTargetIndex();
 
   const desiredCenter = -Math.PI / 2;
-  const offsetAngle = (state.offset - 0.5) * arc * (Math.random() < 0.5 ? 1 : -1);
+  // Смещение — либо 0 (центр), либо случайный оффсет
+  const offsetAngle = state.offsetDisabled ? 0
+    : (state.offset - 0.5) * arc * (Math.random() < 0.5 ? 1 : -1);
   const targetAngle = desiredCenter - (targetIndex * arc + arc / 2) + offsetAngle;
 
   const dir = state.direction === 'cw' ? 1 : -1;
@@ -488,7 +594,7 @@ function spin() {
 
 function lockControls(locked) {
   ['speed','duration','addOption','resetOptions','gearBtn','shopBtn',
-   'wheelStyle','direction','offsetRange','showRivets'].forEach(id => {
+   'wheelStyle','direction','showRivets'].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.disabled = locked;
   });
@@ -505,35 +611,87 @@ function finishSpin(index) {
   // Статистика
   state.stats.totalSpins++;
   if (state.currentWheel === 'daily') state.stats.dailySpins++;
+  if (PRIVATE_WHEELS[state.currentWheel]) state.stats.privateSpins++;
+  if (opt.rare) state.stats.rareHits++;
   state.stats.results[opt.text] = (state.stats.results[opt.text] || 0) + 1;
 
-  // Начисление
-  if (state.currentWheel === 'daily' && opt.type === 'coins') {
-    addBalance(opt.amount);
-    state.stats.coinsEarned += opt.amount;
+  // Применяем эффект сектора
+  applyEffect(opt);
+
+  saveState();
+
+  // Отображаем результат
+  const color = opt.color || '#ffd166';
+  resultEl.innerHTML = `${opt.rare ? '⚡' : '🎉'} <span style="color:${color}">${opt.text}</span> ${opt.rare ? '⚡' : '🎉'}`;
+  resultEl.style.textShadow = `0 0 24px ${color}`;
+  resultEl.className = 'result-box';
+
+  // Редкий сектор — молния и гром, иначе обычная анимация
+  if (opt.rare) {
+    triggerLightning();
+    resultEl.classList.add('anim-lightning');
+  } else {
+    const animClass = 'anim-' + (opt.anim || 'pop');
+    void resultEl.offsetWidth;
+    resultEl.classList.add(animClass);
+  }
+
+  // Звук (если редкий — уже сыграл гром, иначе стандартный)
+  if (!opt.rare) sound.playSound(opt.sound || 'fanfare');
+
+  burstParticles(color, opt.rare ? 60 : (state.purchased.includes('confetti') ? 48 : 24));
+}
+
+function applyEffect(opt) {
+  const type = opt.type || 'normal';
+
+  // Ежедневное — начисление
+  if (state.currentWheel === 'daily' && type === 'coins') {
+    let amount = opt.amount || 0;
+    if (state.purchased.includes('double_daily')) amount *= 2;
+    addBalance(amount);
+    state.stats.coinsEarned += amount;
     state.lastDailySpin = Date.now();
     updateDailyBadge();
   }
 
-  saveState();
+  // Бинарное
+  if (type === 'binary_double') {
+    addBalance(state.balance);
+  } else if (type === 'binary_wipe') {
+    state.balance = 0;
+    updateBalance();
+    saveState();
+  }
+  // (binary_keep — ничего не делаем)
 
-  const color = opt.color || '#ffd166';
-  resultEl.innerHTML = `${state.currentWheel === 'daily' ? '🪙' : '🎉'} <span style="color:${color}">${opt.text}</span> 🎉`;
-  resultEl.style.textShadow = `0 0 24px ${color}`;
-  resultEl.className = 'result-box';
-  const animClass = 'anim-' + (opt.anim || 'pop');
-  void resultEl.offsetWidth;
-  resultEl.classList.add(animClass);
-  sound.playSound(opt.sound || 'fanfare');
-  burstParticles(color);
+  // Джекпот
+  if (type === 'jackpot_10') addBalance(state.balance * 9);
+  if (type === 'jackpot_5')  addBalance(state.balance * 4);
+  if (type === 'jackpot_3')  addBalance(state.balance * 2);
+  if (type === 'jackpot_2')  addBalance(state.balance);
+  // jackpot_0 — пусто
+
+  // Риск-казино
+  if (type === 'risk_win') {
+    state.balance = Math.max(0, state.balance - RISK_BET + RISK_BET * 3);
+    updateBalance();
+  }
+  if (type === 'risk_big') {
+    state.balance = Math.max(0, state.balance - RISK_BET + RISK_BET * 5);
+    updateBalance();
+  }
+  if (type === 'risk_lose') {
+    state.balance = Math.max(0, state.balance - RISK_BET);
+    updateBalance();
+  }
 }
 
-function burstParticles(color) {
+function burstParticles(color, count = 24) {
   const wrap = document.querySelector('.wheel-wrap');
   const rect = wrap.getBoundingClientRect();
   const cx = rect.left + rect.width / 2;
   const cy = rect.top + rect.height / 2;
-  const count = state.purchased.includes('confetti') ? 48 : 24;
   for (let i = 0; i < count; i++) {
     const p = document.createElement('div');
     const c = i % 3 === 0 ? color : `hsl(${Math.random() * 360}, 90%, 60%)`;
@@ -553,10 +711,28 @@ function burstParticles(color) {
 
 function getTargetIndex() {
   const n = getCurrentOptions().length;
-  if (state.rigMode === 'force' && Math.random() < state.rigChance) {
+  const isPrivate = !!PRIVATE_WHEELS[state.currentWheel];
+
+  // Приватная подкрутка
+  if (isPrivate && state.privateRig !== 'fair') {
+    // win — ищем не-проигрышный сектор
+    const opts = getCurrentOptions();
+    const loseTypes = ['binary_wipe', 'jackpot_0', 'risk_lose'];
+    const winIndices = [];
+    const loseIndices = [];
+    opts.forEach((o, i) => {
+      (loseTypes.includes(o.type) ? loseIndices : winIndices).push(i);
+    });
+    const target = state.privateRig === 'win' ? winIndices : loseIndices;
+    if (target.length > 0) return target[Math.floor(Math.random() * target.length)];
+  }
+
+  // Обычная подкрутка
+  if (state.rigMode === 'force' && Math.random() < state.rigChance && !isPrivate) {
     const idx = state.rigTarget;
     if (idx >= 0 && idx < n) return idx;
   }
+
   return Math.floor(Math.random() * n);
 }
 
@@ -566,6 +742,7 @@ const shopBalanceEl = document.getElementById('shopBalance');
 
 function addBalance(amount) {
   state.balance += amount;
+  if (state.balance < 0) state.balance = 0;
   saveState();
   updateBalance();
   balanceEl.animate([
@@ -597,7 +774,8 @@ const dailyBadge = document.getElementById('dailyBadge');
 const dailyTimerEl = document.getElementById('dailyTimer');
 
 function updateDailyBadge() {
-  const timeLeft = state.dailyCooldown - (Date.now() - state.lastDailySpin);
+  const effectiveCooldown = state.purchased.includes('no_cooldown') ? 12 * 60 * 60 * 1000 : state.dailyCooldown;
+  const timeLeft = effectiveCooldown - (Date.now() - state.lastDailySpin);
   if (timeLeft > 0) dailyBadge.classList.remove('visible');
   else dailyBadge.classList.add('visible');
   if (dailyTimerEl) dailyTimerEl.textContent = timeLeft > 0 ? formatTime(timeLeft) : 'доступно!';
@@ -620,8 +798,21 @@ document.querySelectorAll('.tab').forEach(tab => {
     document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
     tab.classList.add('active');
     state.currentWheel = tab.dataset.wheel;
-    document.getElementById('mainSettings').classList.toggle('hidden', state.currentWheel !== 'main');
-    document.getElementById('dailySettings').classList.toggle('hidden', state.currentWheel !== 'daily');
+
+    const isMain = state.currentWheel === 'main';
+    const isDaily = state.currentWheel === 'daily';
+    const isPrivate = !!PRIVATE_WHEELS[state.currentWheel];
+
+    document.getElementById('mainSettings').classList.toggle('hidden', !isMain);
+    document.getElementById('dailySettings').classList.toggle('hidden', !isDaily);
+    document.getElementById('privateSettings').classList.toggle('hidden', !isPrivate);
+
+    if (isPrivate) {
+      const priv = PRIVATE_WHEELS[state.currentWheel];
+      document.getElementById('privateTitle').textContent = priv.title;
+      document.getElementById('privateDesc').textContent = priv.desc;
+    }
+
     state.angle = 0;
     drawWheel();
     sound.click();
@@ -650,14 +841,12 @@ function renderOptions() {
     text.maxLength = 24;
     text.addEventListener('input', () => {
       state.options[i].text = text.value || ' ';
-      drawWheel();
-      updateRigTargets();
-      saveState();
+      drawWheel(); updateRigTargets(); saveState();
     });
 
     const editBtn = document.createElement('button');
     editBtn.className = 'icon-btn';
-    editBtn.textContent = '🎨';
+    editBtn.textContent = opt.rare ? '⚡' : '🎨';
     editBtn.title = 'Настроить';
     editBtn.addEventListener('click', () => openSectorEditor(i));
 
@@ -665,7 +854,7 @@ function renderOptions() {
     del.className = 'icon-btn del';
     del.textContent = '✕';
     del.addEventListener('click', () => {
-      if (state.options.length <= 2) { alert('Минимум 2 варианта'); return; }
+      if (state.options.length <= 2) { alert('Минимум 2'); return; }
       sound.click();
       state.options.splice(i, 1);
       renderOptions(); drawWheel(); updateRigTargets(); saveState();
@@ -686,7 +875,7 @@ function renderDailyList() {
     const row = document.createElement('div');
     row.className = 'option-row';
     row.innerHTML = `<span class="swatch" style="background:${opt.color};display:inline-block;"></span>
-      <span style="flex:1;font-size:.88rem;">${opt.text}</span>
+      <span style="flex:1;font-size:.88rem;">${opt.rare ? '⚡ ' : ''}${opt.text}</span>
       <span style="font-size:.72rem;color:var(--text-dim);">${opt.sound}</span>`;
     el.appendChild(row);
   });
@@ -698,6 +887,7 @@ const sectorText = document.getElementById('sectorText');
 const sectorColor = document.getElementById('sectorColor');
 const sectorSound = document.getElementById('sectorSound');
 const sectorAnim = document.getElementById('sectorAnim');
+const sectorRare = document.getElementById('sectorRare');
 
 function openSectorEditor(index) {
   if (state.spinning) return;
@@ -707,6 +897,7 @@ function openSectorEditor(index) {
   sectorColor.value = opt.color;
   sectorSound.value = opt.sound || 'fanfare';
   sectorAnim.value = opt.anim || 'pop';
+  sectorRare.checked = !!opt.rare;
   sectorModal.classList.add('open');
 }
 
@@ -720,6 +911,7 @@ document.getElementById('sectorSave').addEventListener('click', () => {
   state.options[i].color = sectorColor.value;
   state.options[i].sound = sectorSound.value;
   state.options[i].anim = sectorAnim.value;
+  state.options[i].rare = sectorRare.checked;
   sectorModal.classList.remove('open');
   renderOptions();
   sound.click();
@@ -733,7 +925,6 @@ sectorSound.addEventListener('change', () => {
 
 /* ===================== ПРЕСЕТЫ ===================== */
 const presetsEl = document.getElementById('presets');
-
 function renderPresets() {
   presetsEl.innerHTML = '';
   Object.entries(PRESETS).forEach(([key, preset]) => {
@@ -756,10 +947,12 @@ function renderPresets() {
 /* ===================== МАГАЗИН ===================== */
 const shopModal = document.getElementById('shopModal');
 const shopGrid = document.getElementById('shopGrid');
+let currentCategory = 'all';
 
 function renderShop() {
   shopGrid.innerHTML = '';
-  SHOP_ITEMS.forEach(item => {
+  const items = currentCategory === 'all' ? SHOP_ITEMS : SHOP_ITEMS.filter(i => i.cat === currentCategory);
+  items.forEach(item => {
     const owned = state.purchased.includes(item.id);
     const card = document.createElement('div');
     card.className = 'shop-item';
@@ -788,16 +981,31 @@ function renderShop() {
   updateBalance();
 }
 
+document.querySelectorAll('.shop-cat').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.shop-cat').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    currentCategory = btn.dataset.cat;
+    renderShop();
+  });
+});
+
 function applyPurchase(id) {
   switch (id) {
-    case 'neon_style':
-      state.style = 'neon';
-      const ws = document.getElementById('wheelStyle');
-      if (ws) ws.value = 'neon';
-      drawWheel();
-      break;
+    case 'neon_style': state.style = 'neon'; document.getElementById('wheelStyle').value = 'neon'; drawWheel(); break;
+    case 'pastel_style': state.style = 'pastel'; document.getElementById('wheelStyle').value = 'pastel'; drawWheel(); break;
+    case 'mono_style': state.style = 'mono'; document.getElementById('wheelStyle').value = 'mono'; drawWheel(); break;
     case 'golden_pointer':
       document.querySelector('.pointer-body').style.background = 'radial-gradient(circle at 35% 30%, #fff, #ffd166)';
+      break;
+    case 'golden_frame':
+      document.querySelector('.wheel-wrap').style.filter = 'drop-shadow(0 0 30px #ffd166)';
+      break;
+    case 'vip_badge':
+      document.querySelector('.header h1').insertAdjacentHTML('beforeend', ' <span style="color:#7ce4ff;font-size:1rem;">💎</span>');
+      break;
+    case 'thunder_skin':
+      document.querySelector('.wheel-wrap').style.filter = 'drop-shadow(0 0 20px #7ce4ff)';
       break;
   }
 }
@@ -818,7 +1026,7 @@ const surpriseText = document.getElementById('surpriseText');
 function triggerSurprise() {
   if (state.surpriseActive) return;
   state.surpriseActive = true;
-  state.surpriseReward = Math.floor(50 + Math.random() * 200);
+  state.surpriseReward = Math.floor(30 + Math.random() * 120);  // сюрпризы теперь скромнее ежедневных
   state.stats.surprises++;
   surpriseText.textContent = `Тебе начислено ${state.surpriseReward} 🪙! Забери награду.`;
   surpriseOverlay.classList.add('open');
@@ -856,11 +1064,6 @@ document.getElementById('duration').addEventListener('input', (e) => {
   document.getElementById('durationVal').textContent = state.duration + 'с';
   saveState();
 });
-document.getElementById('offsetRange').addEventListener('input', (e) => {
-  state.offset = +e.target.value / 100;
-  document.getElementById('offsetVal').textContent = e.target.value + '%';
-  saveState();
-});
 document.getElementById('direction').addEventListener('change', (e) => { state.direction = e.target.value; saveState(); });
 document.getElementById('wheelStyle').addEventListener('change', (e) => { state.style = e.target.value; drawWheel(); saveState(); });
 document.getElementById('showRivets').addEventListener('change', (e) => { state.showRivets = e.target.checked; drawWheel(); saveState(); });
@@ -886,7 +1089,7 @@ document.getElementById('addOption').addEventListener('click', () => {
   state.options.push({
     text: 'Вариант ' + (state.options.length + 1),
     color: palette[state.options.length % palette.length],
-    sound: 'fanfare', anim: 'pop', type: 'normal'
+    sound: 'fanfare', anim: 'pop', type: 'normal', rare: false
   });
   sound.click();
   renderOptions();
@@ -919,18 +1122,9 @@ document.getElementById('gearClose').addEventListener('click', () => {
 /* ===================== ЭКСПОРТ/ИМПОРТ ===================== */
 function exportProgress() {
   const data = {
-    version: '4.0',
+    version: '5.0',
     exportedAt: new Date().toISOString(),
-    state: {
-      options: state.options,
-      dailyOptions: state.dailyOptions,
-      speed: state.speed, duration: state.duration, offset: state.offset,
-      direction: state.direction, style: state.style, showRivets: state.showRivets,
-      soundEnabled: state.soundEnabled, tickEnabled: state.tickEnabled,
-      rigMode: state.rigMode, rigTarget: state.rigTarget, rigChance: state.rigChance,
-      balance: state.balance, lastDailySpin: state.lastDailySpin,
-      purchased: state.purchased, stats: state.stats, adminPin: state.adminPin,
-    }
+    state: JSON.parse(localStorage.getItem(SAVE_KEY) || '{}'),
   };
   const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
@@ -946,23 +1140,10 @@ function importProgress(file) {
   reader.onload = (e) => {
     try {
       const data = JSON.parse(e.target.result);
-      const s = data.state || data;
-      if (s.options && Array.isArray(s.options)) state.options = s.options;
-      if (s.dailyOptions) state.dailyOptions = s.dailyOptions;
-      if (typeof s.balance === 'number') state.balance = s.balance;
-      if (typeof s.lastDailySpin === 'number') state.lastDailySpin = s.lastDailySpin;
-      if (Array.isArray(s.purchased)) state.purchased = s.purchased;
-      if (s.stats) state.stats = { ...state.stats, ...s.stats };
-      if (typeof s.adminPin === 'string') state.adminPin = s.adminPin;
-      if (s.speed) state.speed = s.speed;
-      if (s.duration) state.duration = s.duration;
-      if (typeof s.offset === 'number') state.offset = s.offset;
-      if (s.direction) state.direction = s.direction;
-      if (s.style) state.style = s.style;
-      if (typeof s.showRivets === 'boolean') state.showRivets = s.showRivets;
-      saveState();
-      applyStateToUI();
-      alert('✅ Прогресс успешно загружен!');
+      if (!data.state) throw new Error('Неверный формат');
+      localStorage.setItem(SAVE_KEY, JSON.stringify(data.state));
+      alert('✅ Импорт успешен! Перезагрузка...');
+      location.reload();
     } catch(err) {
       alert('❌ Ошибка импорта: ' + err.message);
     }
@@ -977,20 +1158,18 @@ document.getElementById('importFile').addEventListener('change', (e) => {
   e.target.value = '';
 });
 
-/* ===================== PIN-АВТОРИЗАЦИЯ ===================== */
+/* ===================== PIN ===================== */
 const pinModal = document.getElementById('pinModal');
 const pinInput = document.getElementById('pinInput');
 const pinError = document.getElementById('pinError');
 const secretPanel = document.getElementById('secretPanel');
 
-function isAdminUnlocked() {
-  return Date.now() < state.adminUnlockedUntil;
-}
+function isAdminUnlocked() { return Date.now() < state.adminUnlockedUntil; }
 
 function openPinModal() {
   if (Date.now() < state.adminBlockedUntil) {
     const left = Math.ceil((state.adminBlockedUntil - Date.now()) / 1000);
-    alert(`Заблокировано. Попробуйте через ${left} сек.`);
+    alert(`Заблокировано. Через ${left} сек.`);
     return;
   }
   pinInput.value = '';
@@ -1002,7 +1181,6 @@ function openPinModal() {
 function submitPin() {
   const entered = pinInput.value.trim();
   if (!entered) { pinError.textContent = 'Введите PIN'; return; }
-
   if (entered === state.adminPin) {
     state.adminUnlockedUntil = Date.now() + ADMIN_SESSION_MS;
     state.adminFailCount = 0;
@@ -1020,7 +1198,7 @@ function submitPin() {
       state.adminBlockedUntil = Date.now() + 60 * 1000;
       state.adminFailCount = 0;
       pinModal.classList.remove('open');
-      alert('Слишком много попыток. Блокировка на 60 секунд.');
+      alert('Блокировка на 60 секунд.');
     }
   }
 }
@@ -1028,9 +1206,6 @@ function submitPin() {
 document.getElementById('pinSubmit').addEventListener('click', submitPin);
 pinInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') submitPin(); });
 document.getElementById('pinCancel').addEventListener('click', () => pinModal.classList.remove('open'));
-document.getElementById('pinForgot').addEventListener('click', () => {
-  alert('PIN по умолчанию: 7351\nЕсли вы его меняли — используйте «Полный сброс» в браузере (localStorage).');
-});
 
 /* ===================== СЕКРЕТНЫЙ ЖЕСТ ===================== */
 const logo = document.getElementById('logo');
@@ -1046,14 +1221,10 @@ logo.addEventListener('click', (e) => {
   logo.classList.add('secret-pulse');
   clearTimeout(secretTimer);
   secretTimer = setTimeout(() => { secretClicks = 0; }, 1500);
-
   if (secretClicks >= 3) {
     secretClicks = 0;
-    if (isAdminUnlocked()) {
-      secretPanel.classList.toggle('open');
-    } else {
-      openPinModal();
-    }
+    if (isAdminUnlocked()) secretPanel.classList.toggle('open');
+    else openPinModal();
   }
 });
 
@@ -1069,17 +1240,18 @@ document.querySelectorAll('.admin-tab').forEach(tab => {
     document.querySelector(`.admin-content[data-acontent="${target}"]`)?.classList.add('active');
     if (target === 'stats') renderAdminStats();
     if (target === 'daily') renderAdminDaily();
-    if (target === 'wallet') {
-      document.getElementById('adminBalanceSet').value = state.balance;
-    }
+    if (target === 'wallet') document.getElementById('adminBalanceSet').value = state.balance;
   });
 });
 
-/* ===================== АДМИН: ПОДКРУТКА ===================== */
+/* ===================== ПОДКРУТКА + СМЕЩЕНИЕ ===================== */
 const rigMode = document.getElementById('rigMode');
 const rigTarget = document.getElementById('rigTarget');
 const rigChance = document.getElementById('rigChance');
 const secretStatus = document.getElementById('secretStatus');
+const offsetRange = document.getElementById('offsetRange');
+const offsetVal = document.getElementById('offsetVal');
+const offsetDisabled = document.getElementById('offsetDisabled');
 
 function updateRigTargets() {
   const prev = rigTarget.value;
@@ -1114,6 +1286,18 @@ document.getElementById('clearRig').addEventListener('click', () => {
   state.rigMode = 'fair'; state.rigChance = 1;
   rigMode.value = 'fair'; rigChance.value = '1';
   updateSecretStatus(); saveState(); sound.click();
+});
+
+// Смещение (в админке)
+offsetRange.addEventListener('input', (e) => {
+  state.offset = +e.target.value / 100;
+  offsetVal.textContent = e.target.value + '%';
+  saveState();
+});
+offsetDisabled.addEventListener('change', (e) => {
+  state.offsetDisabled = e.target.checked;
+  offsetRange.disabled = e.target.checked;
+  saveState();
 });
 
 /* ===================== АДМИН: ЭКОНОМИКА ===================== */
@@ -1216,9 +1400,30 @@ function renderAdminDaily() {
 
 document.getElementById('adminDailyAdd').addEventListener('click', () => {
   state.dailyOptions.push({
-    text: '20🪙', color: '#a855f7', sound: 'coin', anim: 'pop', type: 'coins', amount: 20
+    text: '400🪙', color: '#a855f7', sound: 'coin', anim: 'pop', type: 'coins', amount: 400, rare: false
   });
   renderAdminDaily(); renderDailyList(); saveState();
+});
+
+/* ===================== АДМИН: ПРИВАТНЫЕ ===================== */
+document.getElementById('privateBinary').addEventListener('change', (e) => {
+  state.privateVisible.binary = e.target.checked;
+  document.querySelector('.tab[data-wheel="binary"]').style.display = e.target.checked ? '' : 'none';
+  saveState();
+});
+document.getElementById('privateJackpot').addEventListener('change', (e) => {
+  state.privateVisible.jackpot = e.target.checked;
+  document.querySelector('.tab[data-wheel="jackpot"]').style.display = e.target.checked ? '' : 'none';
+  saveState();
+});
+document.getElementById('privateRisk').addEventListener('change', (e) => {
+  state.privateVisible.risk = e.target.checked;
+  document.querySelector('.tab[data-wheel="risk"]').style.display = e.target.checked ? '' : 'none';
+  saveState();
+});
+document.getElementById('privateRig').addEventListener('change', (e) => {
+  state.privateRig = e.target.value;
+  saveState();
 });
 
 /* ===================== АДМИН: СТАТИСТИКА ===================== */
@@ -1227,12 +1432,12 @@ function renderAdminStats() {
   document.getElementById('statDailySpins').textContent = state.stats.dailySpins;
   document.getElementById('statCoinsEarned').textContent = state.stats.coinsEarned;
   document.getElementById('statSurprises').textContent = state.stats.surprises;
+  document.getElementById('statPrivateSpins').textContent = state.stats.privateSpins;
+  document.getElementById('statRare').textContent = state.stats.rareHits;
 
   const topEl = document.getElementById('adminTopResults');
   topEl.innerHTML = '';
-  const sorted = Object.entries(state.stats.results)
-    .sort((a, b) => b[1] - a[1])
-    .slice(0, 8);
+  const sorted = Object.entries(state.stats.results).sort((a, b) => b[1] - a[1]).slice(0, 8);
   if (sorted.length === 0) {
     topEl.innerHTML = '<div style="color:var(--text-dim);text-align:center;padding:8px;">Пока нет данных</div>';
     return;
@@ -1247,7 +1452,7 @@ function renderAdminStats() {
 
 document.getElementById('adminResetStats').addEventListener('click', () => {
   if (!confirm('Сбросить статистику?')) return;
-  state.stats = { totalSpins: 0, dailySpins: 0, coinsEarned: 0, surprises: 0, results: {} };
+  state.stats = { totalSpins: 0, dailySpins: 0, privateSpins: 0, coinsEarned: 0, surprises: 0, rareHits: 0, results: {} };
   saveState();
   renderAdminStats();
 });
@@ -1255,7 +1460,7 @@ document.getElementById('adminResetStats').addEventListener('click', () => {
 /* ===================== АДМИН: СИСТЕМА ===================== */
 document.getElementById('adminSetPin').addEventListener('click', () => {
   const newPin = document.getElementById('adminNewPin').value.trim();
-  if (newPin.length < 4) { alert('PIN должен быть минимум 4 символа'); return; }
+  if (newPin.length < 4) { alert('PIN минимум 4 символа'); return; }
   state.adminPin = newPin;
   saveState();
   document.getElementById('adminNewPin').value = '';
@@ -1282,41 +1487,46 @@ document.getElementById('adminLogout').addEventListener('click', () => {
   alert('Выход из админки');
 });
 
-/* ===================== ПРИМЕНЕНИЕ СОСТОЯНИЯ К UI ===================== */
-function applyStateToUI() {
-  document.getElementById('speed').value = state.speed;
-  document.getElementById('speedVal').textContent = state.speed;
-  document.getElementById('duration').value = state.duration;
-  document.getElementById('durationVal').textContent = state.duration + 'с';
-  document.getElementById('offsetRange').value = Math.round(state.offset * 100);
-  document.getElementById('offsetVal').textContent = Math.round(state.offset * 100) + '%';
-  document.getElementById('direction').value = state.direction;
-  document.getElementById('wheelStyle').value = state.style;
-  document.getElementById('showRivets').checked = state.showRivets;
-  document.getElementById('soundToggle').checked = state.soundEnabled;
-  document.getElementById('tickToggle').checked = state.tickEnabled;
-  rigMode.value = state.rigMode;
-  rigChance.value = state.rigChance;
-  updateBalance();
-  updateDailyBadge();
-  updateRigTargets();
-  renderOptions();
-  renderDailyList();
-  drawWheel();
-}
-
 /* ===================== ИНИЦИАЛИЗАЦИЯ ===================== */
 loadState();
 
-// Применяем звуки
 sound.enabled = state.soundEnabled;
 sound.tickEnabled = state.tickEnabled;
 
-// Первичная отрисовка
+// Применяем видимость приватных колёс
+['binary', 'jackpot', 'risk'].forEach(k => {
+  const tab = document.querySelector(`.tab[data-wheel="${k}"]`);
+  if (tab) tab.style.display = state.privateVisible[k] ? '' : 'none';
+});
+
 renderPresets();
 renderOptions();
 renderDailyList();
-applyStateToUI();
+updateBalance();
+updateDailyBadge();
+updateRigTargets();
+drawWheel();
+
+// Применяем настройки UI
+document.getElementById('speed').value = state.speed;
+document.getElementById('speedVal').textContent = state.speed;
+document.getElementById('duration').value = state.duration;
+document.getElementById('durationVal').textContent = state.duration + 'с';
+document.getElementById('direction').value = state.direction;
+document.getElementById('wheelStyle').value = state.style;
+document.getElementById('showRivets').checked = state.showRivets;
+document.getElementById('soundToggle').checked = state.soundEnabled;
+document.getElementById('tickToggle').checked = state.tickEnabled;
+rigMode.value = state.rigMode;
+rigChance.value = state.rigChance;
+offsetRange.value = Math.round(state.offset * 100);
+offsetVal.textContent = Math.round(state.offset * 100) + '%';
+offsetDisabled.checked = state.offsetDisabled;
+offsetRange.disabled = state.offsetDisabled;
+document.getElementById('privateBinary').checked = state.privateVisible.binary;
+document.getElementById('privateJackpot').checked = state.privateVisible.jackpot;
+document.getElementById('privateRisk').checked = state.privateVisible.risk;
+document.getElementById('privateRig').value = state.privateRig;
 
 // Купленные товары
 state.purchased.forEach(id => applyPurchase(id));
