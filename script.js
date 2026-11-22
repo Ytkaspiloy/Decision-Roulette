@@ -1,10 +1,9 @@
 /* =========================================================
-   КОЛЕСО ФОРТУНЫ PRO 7.0
-   Исправления: временные бусты, работающие мини-игры, VIP-бонусы, темы
+   КОЛЕСО ФОРТУНЫ PRO 7.1 — КРИТИЧЕСКИЙ ФИКС
    ========================================================= */
 'use strict';
 
-const SAVE_KEY = 'wheel_pro_v7';
+const SAVE_KEY = 'wheel_pro_v71';
 const DEFAULT_PIN = '7351';
 const ADMIN_SESSION_MS = 10 * 60 * 1000;
 
@@ -124,27 +123,21 @@ const PRESETS = {
   ]},
 };
 
-/* Магазин — теперь с временем действия для бустов и бонусами для особых */
 const SHOP_ITEMS = [
-  // Визуальные — постоянные после покупки (но можно убрать)
   { id: 'extra_theme',    icon: '🌈', name: 'Радужная тема',      price: 500,  cat: 'visual',  type: 'toggle' },
   { id: 'golden_pointer', icon: '⭐', name: 'Золотая стрелка',    price: 300,  cat: 'visual',  type: 'toggle' },
   { id: 'neon_style',     icon: '⚡', name: 'Неоновый стиль',      price: 350,  cat: 'visual',  type: 'toggle' },
   { id: 'pastel_style',   icon: '🌸', name: 'Пастельный стиль',   price: 400,  cat: 'visual',  type: 'toggle' },
   { id: 'mono_style',     icon: '⚫', name: 'Минимализм',         price: 250,  cat: 'visual',  type: 'toggle' },
   { id: 'rainbow_rivets', icon: '✨', name: 'Радужные заклёпки',  price: 600,  cat: 'visual',  type: 'toggle' },
-
-  // Бусты — ВРЕМЕННЫЕ, покупаются заново после истечения
-  { id: 'confetti',       icon: '🎉', name: 'Конфетти+',          price: 150,  cat: 'boost',   type: 'timed', duration: 60 * 60 * 1000 },      // 1ч
-  { id: 'double_tick',    icon: '🎵', name: 'Двойные тики',       price: 100,  cat: 'boost',   type: 'timed', duration: 60 * 60 * 1000 },      // 1ч
-  { id: 'double_daily',   icon: '⏰', name: '2× ежедневные',      price: 800,  cat: 'boost',   type: 'timed', duration: 24 * 60 * 60 * 1000 },  // 24ч
-  { id: 'no_cooldown',    icon: '🔥', name: 'Быстрый кулдаун',    price: 1500, cat: 'boost',   type: 'timed', duration: 24 * 60 * 60 * 1000 },  // 24ч
-  { id: 'lucky_charm',    icon: '🍀', name: 'Талисман удачи',     price: 1000, cat: 'boost',   type: 'timed', duration: 60 * 60 * 1000 },      // 1ч: +10% к монетам с ежедневного
-
-  // Особые — постоянные, дают бонусы
-  { id: 'thunder_skin',   icon: '⛈️', name: 'Громовая тема',     price: 750,  cat: 'special', type: 'toggle', bonus: 'Стиль "неон" в подарок' },
-  { id: 'golden_frame',   icon: '👑', name: 'Золотая рамка',      price: 2000, cat: 'special', type: 'toggle', bonus: '+5% к монетам с ежедневного' },
-  { id: 'vip_badge',      icon: '💎', name: 'VIP-статус',         price: 5000, cat: 'special', type: 'vip',    bonus: '+15% к монетам, скидка 20% в магазине' },
+  { id: 'confetti',       icon: '🎉', name: 'Конфетти+',          price: 150,  cat: 'boost',   type: 'timed', duration: 60 * 60 * 1000 },
+  { id: 'double_tick',    icon: '🎵', name: 'Двойные тики',       price: 100,  cat: 'boost',   type: 'timed', duration: 60 * 60 * 1000 },
+  { id: 'double_daily',   icon: '⏰', name: '2× ежедневные',      price: 800,  cat: 'boost',   type: 'timed', duration: 24 * 60 * 60 * 1000 },
+  { id: 'no_cooldown',    icon: '🔥', name: 'Быстрый кулдаун',    price: 1500, cat: 'boost',   type: 'timed', duration: 24 * 60 * 60 * 1000 },
+  { id: 'lucky_charm',    icon: '🍀', name: 'Талисман удачи',     price: 1000, cat: 'boost',   type: 'timed', duration: 60 * 60 * 1000 },
+  { id: 'thunder_skin',   icon: '⛈️', name: 'Громовая тема',     price: 750,  cat: 'special', type: 'toggle', bonus: 'Стиль "неон"' },
+  { id: 'golden_frame',   icon: '👑', name: 'Золотая рамка',      price: 2000, cat: 'special', type: 'toggle', bonus: '+5% к монетам' },
+  { id: 'vip_badge',      icon: '💎', name: 'VIP-статус',         price: 5000, cat: 'special', type: 'vip',    bonus: '+15% монет, −20% цены' },
 ];
 
 const state = {
@@ -155,85 +148,39 @@ const state = {
   angle: 0,
   spinning: false,
   lastTickIndex: -1,
-
   speed: 6, duration: 6,
   offset: 0.35, offsetDisabled: false,
-  direction: 'cw', style: 'vibrant', showRivets: true,
+  direction: 'cw', style: 'vibrant', showRivets: true, rainbowRivets: false,
   theme: 'dark',
   soundEnabled: true, tickEnabled: true,
-
   rigMode: 'fair', rigTarget: 0, rigChance: 1,
   privateRig: 'fair',
   privateVisible: { binary: true, jackpot: true, risk: true, whale: true, legend: true },
   gameRigs: { dice: 'fair', guess: 'fair', rocket: 'fair' },
-
   balance: 100,
   lastDailySpin: 0,
   dailyCooldown: 24 * 60 * 60 * 1000,
-
-  // purchased — навсегда куплено (визуал, особые)
-  // timed — временные бусты: { id: expiryTime }
-  // applied — активные постоянные (toggle)
-  purchased: [],
-  applied: [],
-  timed: {},   // { 'confetti': 1234567890 }
-
+  purchased: [], applied: [], timed: {},
   surpriseActive: false, surpriseReward: 0,
   editingSectorIndex: -1,
-
-  stats: {
-    totalSpins: 0, dailySpins: 0, privateSpins: 0,
-    coinsEarned: 0, surprises: 0, rareHits: 0, results: {},
-  },
-
+  stats: { totalSpins: 0, dailySpins: 0, privateSpins: 0, coinsEarned: 0, surprises: 0, rareHits: 0, results: {} },
   adminPin: DEFAULT_PIN,
   adminUnlockedUntil: 0, adminFailCount: 0, adminBlockedUntil: 0,
 };
 
-/* Проверка: активен ли буст */
-function isBoostActive(id) {
-  const exp = state.timed[id];
-  return exp && exp > Date.now();
-}
-
-/* Проверка: куплен ли предмет */
-function isOwned(id) {
-  return state.purchased.includes(id);
-}
-
-/* Проверка: применён ли (для toggle) */
-function isApplied(id) {
-  return state.applied.includes(id);
-}
-
-/* Активен ли (для timed) */
-function isTimedActive(id) {
-  return isBoostActive(id);
-}
-
-/* VIP бонус: +15% к монетам */
-function hasVip() {
-  return isOwned('vip_badge');
-}
-
-/* Бонус к ежедневным монетам */
+/* Хелперы */
+function isBoostActive(id) { const exp = state.timed[id]; return exp && exp > Date.now(); }
+function isOwned(id) { return state.purchased.includes(id); }
+function isApplied(id) { return state.applied.includes(id); }
+function hasVip() { return isOwned('vip_badge'); }
+function shopDiscount() { return hasVip() ? 0.20 : 0; }
+function finalPrice(item) { return Math.round(item.price * (1 - shopDiscount())); }
 function dailyCoinBonus(amount) {
   let bonus = 1;
   if (hasVip()) bonus += 0.15;
   if (isApplied('golden_frame')) bonus += 0.05;
-  if (isTimedActive('lucky_charm')) bonus += 0.10;
+  if (isBoostActive('lucky_charm')) bonus += 0.10;
   return Math.round(amount * bonus);
-}
-
-/* Скидка в магазине */
-function shopDiscount() {
-  return hasVip() ? 0.20 : 0;
-}
-
-/* Итоговая цена */
-function finalPrice(item) {
-  const disc = shopDiscount();
-  return Math.round(item.price * (1 - disc));
 }
 
 function saveState() {
@@ -243,8 +190,8 @@ function saveState() {
       speed: state.speed, duration: state.duration,
       offset: state.offset, offsetDisabled: state.offsetDisabled,
       direction: state.direction, style: state.style, theme: state.theme,
-      showRivets: state.showRivets, soundEnabled: state.soundEnabled,
-      tickEnabled: state.tickEnabled,
+      showRivets: state.showRivets, rainbowRivets: state.rainbowRivets,
+      soundEnabled: state.soundEnabled, tickEnabled: state.tickEnabled,
       rigMode: state.rigMode, rigTarget: state.rigTarget, rigChance: state.rigChance,
       privateRig: state.privateRig, privateVisible: state.privateVisible,
       gameRigs: state.gameRigs,
@@ -265,7 +212,7 @@ function loadState() {
      'balance','lastDailySpin','dailyCooldown','adminPin','privateRig','theme'].forEach(k => {
       if (d[k] !== undefined) state[k] = d[k];
     });
-    ['offsetDisabled','showRivets','soundEnabled','tickEnabled'].forEach(k => {
+    ['offsetDisabled','showRivets','soundEnabled','tickEnabled','rainbowRivets'].forEach(k => {
       if (typeof d[k] === 'boolean') state[k] = d[k];
     });
     if (Array.isArray(d.options) && d.options.length >= 2) state.options = d.options;
@@ -276,6 +223,16 @@ function loadState() {
     if (d.stats) state.stats = { ...state.stats, ...d.stats };
     if (d.privateVisible) state.privateVisible = { ...state.privateVisible, ...d.privateVisible };
     if (d.gameRigs) state.gameRigs = { ...state.gameRigs, ...d.gameRigs };
+
+    // ⭐ ФИКС: чистка мёртвых ID и просроченных таймеров
+    const validIds = SHOP_ITEMS.map(i => i.id);
+    state.purchased = state.purchased.filter(id => validIds.includes(id));
+    state.applied = state.applied.filter(id => validIds.includes(id));
+    Object.keys(state.timed).forEach(id => {
+      if (!validIds.includes(id) || !state.timed[id] || state.timed[id] <= Date.now()) {
+        delete state.timed[id];
+      }
+    });
   } catch(e) { console.warn(e); }
 }
 
@@ -401,7 +358,7 @@ function drawWheel() {
     ctx.shadowColor = opts[i].rare ? '#ffd166' : 'rgba(0,0,0,.8)';
     ctx.shadowBlur = opts[i].rare ? 16 : 8;
     ctx.shadowOffsetY = 2;
-    let label = opts[i].text.length > 18 ? opts[i].text.slice(0, 17) + '…' : opts[i].text;
+    const label = opts[i].text.length > 18 ? opts[i].text.slice(0, 17) + '…' : opts[i].text;
     ctx.fillText(label, RADIUS - 30, 0);
     ctx.restore();
   }
@@ -420,8 +377,14 @@ function drawWheel() {
       ctx.beginPath();
       ctx.arc(x, y, 4, 0, Math.PI * 2);
       const g = ctx.createRadialGradient(x - 1, y - 1, 0, x, y, 5);
-      g.addColorStop(0, '#fff');
-      g.addColorStop(1, 'rgba(255,255,255,.25)');
+      // ⭐ ФИКС: радужные заклёпки
+      if (state.rainbowRivets) {
+        g.addColorStop(0, `hsl(${(i * 11) % 360}, 90%, 75%)`);
+        g.addColorStop(1, `hsl(${(i * 11) % 360}, 90%, 45%)`);
+      } else {
+        g.addColorStop(0, '#fff');
+        g.addColorStop(1, 'rgba(255,255,255,.25)');
+      }
       ctx.fillStyle = g;
       ctx.fill();
     }
@@ -436,6 +399,7 @@ function drawWheel() {
   ctx.fill();
 }
 
+/* Звук */
 class SoundEngine {
   constructor() { this.ctx = null; this.enabled = true; this.tickEnabled = true; this.lastTickTime = 0; }
   init() { if (this.ctx) return; const AC = window.AudioContext || window.webkitAudioContext; if (AC) this.ctx = new AC(); }
@@ -523,6 +487,7 @@ function triggerLightning() {
   }, 1200);
 }
 
+/* Вращение */
 const spinBtn = document.getElementById('spinBtn');
 const resultEl = document.getElementById('result');
 function easeOutCubic(t) { return 1 - Math.pow(1 - t, 3); }
@@ -532,6 +497,12 @@ function spin() {
   const opts = getCurrentOptions();
   if (opts.length === 0) return;
 
+  // ⭐ ФИКС: не крутим бинарное с 0 балансом
+  if (state.currentWheel === 'binary' && state.balance < 1) {
+    alert('Нечего удваивать! Баланс 0. Заработайте монеты сначала.');
+    return;
+  }
+
   const priv = PRIVATE_WHEELS[state.currentWheel];
   const cost = priv?.cost || 0;
   if (cost > 0 && state.balance < cost) {
@@ -540,7 +511,7 @@ function spin() {
   }
 
   if (state.currentWheel === 'daily') {
-    const effectiveCd = isTimedActive('no_cooldown') ? 12 * 60 * 60 * 1000 : state.dailyCooldown;
+    const effectiveCd = isBoostActive('no_cooldown') ? 12 * 60 * 60 * 1000 : state.dailyCooldown;
     const timeLeft = effectiveCd - (Date.now() - state.lastDailySpin);
     if (timeLeft > 0) { alert('Через ' + formatTime(timeLeft)); return; }
   }
@@ -638,7 +609,7 @@ function finishSpin(index) {
     resultEl.classList.add(animClass);
   }
   if (!opt.rare) sound.playSound(opt.sound || 'fanfare');
-  burstParticles(color, isTimedActive('confetti') ? 60 : 24);
+  burstParticles(color, isBoostActive('confetti') ? 60 : 24);
 }
 
 function applyEffect(opt) {
@@ -646,7 +617,7 @@ function applyEffect(opt) {
 
   if (state.currentWheel === 'daily' && type === 'coins') {
     let amount = opt.amount || 0;
-    if (isTimedActive('double_daily')) amount *= 2;
+    if (isBoostActive('double_daily')) amount *= 2;
     amount = dailyCoinBonus(amount);
     addBalance(amount);
     state.stats.coinsEarned += amount;
@@ -660,9 +631,7 @@ function applyEffect(opt) {
     addBalance(amount);
     state.stats.coinsEarned += amount;
   }
-  if (type === 'double') {
-    addBalance(state.balance);
-  }
+  if (type === 'double') addBalance(state.balance);
   if (type === 'wipe') {
     state.balance = 0;
     updateBalance();
@@ -713,6 +682,7 @@ function getTargetIndex() {
   return Math.floor(Math.random() * n);
 }
 
+/* Баланс */
 const balanceEl = document.getElementById('balance');
 function addBalance(amount) {
   state.balance += amount;
@@ -738,10 +708,11 @@ function updateBalance() {
   if (shopBal) shopBal.textContent = state.balance;
 }
 
+/* Ежедневное */
 const dailyBadge = document.getElementById('dailyBadge');
 const dailyTimerEl = document.getElementById('dailyTimer');
 function updateDailyBadge() {
-  const effectiveCd = isTimedActive('no_cooldown') ? 12 * 60 * 60 * 1000 : state.dailyCooldown;
+  const effectiveCd = isBoostActive('no_cooldown') ? 12 * 60 * 60 * 1000 : state.dailyCooldown;
   const timeLeft = effectiveCd - (Date.now() - state.lastDailySpin);
   if (timeLeft > 0) dailyBadge.classList.remove('visible');
   else dailyBadge.classList.add('visible');
@@ -752,12 +723,23 @@ function formatTime(ms) {
   const h = Math.floor(t / 3600), m = Math.floor((t % 3600) / 60), s = t % 60;
   return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
 }
+
+/* ⭐ Живое обновление таймеров */
 setInterval(() => {
   updateDailyBadge();
-  if (shopModal?.classList.contains('open')) renderShop();
+  let needsRerender = false;
+  document.querySelectorAll('[data-timer]').forEach(el => {
+    const id = el.dataset.timer;
+    const exp = state.timed[id];
+    if (!exp) return;
+    const left = exp - Date.now();
+    if (left <= 0) { needsRerender = true; return; }
+    el.textContent = '⏳ ' + formatTime(left);
+  });
+  if (needsRerender && shopModal?.classList.contains('open')) renderShop();
 }, 1000);
 
-/* ============ ВКЛАДКИ ============ */
+/* ⭐ ФИКС: переключение вкладок КОЛЁС */
 document.querySelectorAll('.tab').forEach(tab => {
   tab.addEventListener('click', () => {
     if (state.spinning) return;
@@ -794,23 +776,31 @@ document.querySelectorAll('.tab').forEach(tab => {
   });
 });
 
+/* ⭐ КРИТИЧЕСКИЙ ФИКС: переключение вкладок ИГР */
 document.querySelectorAll('.game-tab').forEach(tab => {
   tab.addEventListener('click', () => {
-    if (state.spinning) return;
+    if (state.spinning || dicePlaying || guessPlaying || rocketPlaying) return;
     document.querySelectorAll('.game-tab').forEach(t => t.classList.remove('active'));
     tab.classList.add('active');
     const game = tab.dataset.game;
     state.currentGame = game;
 
-    document.querySelector('.stage').style.display = game === 'wheel' ? 'flex' : 'none';
-    document.getElementById('gameDice').classList.toggle('hidden', game !== 'dice');
-    document.getElementById('gameGuess').classList.toggle('hidden', game !== 'guess');
-    document.getElementById('gameRocket').classList.toggle('hidden', game !== 'rocket');
+    if (game === 'wheel') {
+      document.body.classList.remove('game-mode');
+      document.getElementById('gameDice').classList.add('hidden');
+      document.getElementById('gameGuess').classList.add('hidden');
+      document.getElementById('gameRocket').classList.add('hidden');
+    } else {
+      document.body.classList.add('game-mode');
+      document.getElementById('gameDice').classList.toggle('hidden', game !== 'dice');
+      document.getElementById('gameGuess').classList.toggle('hidden', game !== 'guess');
+      document.getElementById('gameRocket').classList.toggle('hidden', game !== 'rocket');
+    }
     sound.click();
   });
 });
 
-/* ============ РЕДАКТОР ВАРИАНТОВ ============ */
+/* Редактор вариантов */
 const optionsList = document.getElementById('optionsList');
 const optCounter = document.getElementById('optCounter');
 function renderOptions() {
@@ -859,6 +849,7 @@ function renderDailyList() {
   });
 }
 
+/* Редактор сектора */
 const sectorModal = document.getElementById('sectorModal');
 const sectorText = document.getElementById('sectorText');
 const sectorColor = document.getElementById('sectorColor');
@@ -892,6 +883,7 @@ document.getElementById('sectorSave').addEventListener('click', () => {
 });
 sectorSound.addEventListener('change', () => { sound.init(); sound.resume(); sound.playSound(sectorSound.value); });
 
+/* Пресеты */
 const presetsEl = document.getElementById('presets');
 function renderPresets() {
   presetsEl.innerHTML = '';
@@ -912,7 +904,7 @@ function renderPresets() {
   });
 }
 
-/* ============ МАГАЗИН ============ */
+/* Магазин */
 const shopModal = document.getElementById('shopModal');
 const shopGrid = document.getElementById('shopGrid');
 let currentCategory = 'all';
@@ -924,7 +916,7 @@ function renderShop() {
   items.forEach(item => {
     const owned = isOwned(item.id);
     const applied = isApplied(item.id);
-    const timedActive = isTimedActive(item.id);
+    const timedActive = isBoostActive(item.id);
     const price = finalPrice(item);
 
     const card = document.createElement('div');
@@ -937,19 +929,17 @@ function renderShop() {
     let timerInfo = '';
 
     if (item.type === 'timed') {
-      // Временные бусты
       const dur = item.duration;
       const durStr = dur >= 24 * 60 * 60 * 1000 ? Math.round(dur / (24 * 60 * 60 * 1000)) + 'ч' : Math.round(dur / (60 * 60 * 1000)) + 'ч';
       durationInfo = `<div class="shop-item-duration">⏱ ${durStr}</div>`;
       if (timedActive) {
         const left = state.timed[item.id] - Date.now();
-        timerInfo = `<div class="shop-item-timer">⏳ ${formatTime(left)}</div>`;
+        timerInfo = `<div class="shop-item-timer" data-timer="${item.id}">⏳ ${formatTime(left)}</div>`;
         actionBtn = `<button class="btn remove small" data-remove-timed="${item.id}">Отменить</button>`;
       } else {
         actionBtn = `<button class="btn add small" data-buy="${item.id}" data-price="${price}">Купить ${price}🪙</button>`;
       }
     } else if (item.type === 'toggle') {
-      // Постоянные toggle
       if (!owned) {
         actionBtn = `<button class="btn add small" data-buy="${item.id}" data-price="${price}">Купить ${price}🪙</button>`;
       } else {
@@ -974,35 +964,32 @@ function renderShop() {
       ${item.bonus ? `<div style="font-size:.65rem;color:var(--accent-3);margin-bottom:6px;">${item.bonus}</div>` : ''}
       ${actionBtn}`;
 
-    // Обработчики
     card.querySelector('[data-buy]')?.addEventListener('click', () => {
       if (state.balance < price) { alert('Недостаточно монет'); return; }
       if (!confirm(`Купить «${item.name}» за ${price}🪙?`)) return;
-      if (spendBalance(price)) {
-        if (item.type === 'timed') {
-          state.timed[item.id] = Date.now() + item.duration;
-          sound.playSound('coin');
-        } else {
-          if (!state.purchased.includes(item.id)) state.purchased.push(item.id);
-          if (item.type === 'toggle') {
-            state.applied.push(item.id);
-            applyItem(item.id);
-          }
-          if (item.id === 'vip_badge') {
-            document.getElementById('vipMark').textContent = '💎';
-            sound.playSound('fanfare');
-          }
-          if (item.id === 'thunder_skin') {
-            state.style = 'neon';
-            document.getElementById('wheelStyle').value = 'neon';
-            drawWheel();
-          }
-          sound.playSound('coin');
+      if (!spendBalance(price)) return;
+
+      if (item.type === 'timed') {
+        state.timed[item.id] = Date.now() + item.duration;
+      } else {
+        if (!state.purchased.includes(item.id)) state.purchased.push(item.id);
+        if (item.type === 'toggle') {
+          if (!state.applied.includes(item.id)) state.applied.push(item.id);
+          applyItem(item.id);
         }
-        saveState();
-        renderShop();
-        updateBalance();
+        if (item.id === 'vip_badge') {
+          document.getElementById('vipMark').textContent = '💎';
+        }
+        if (item.id === 'thunder_skin') {
+          state.style = 'neon';
+          document.getElementById('wheelStyle').value = 'neon';
+          drawWheel();
+        }
       }
+      sound.playSound('coin');
+      saveState();
+      renderShop();
+      updateBalance();
     });
 
     card.querySelector('[data-toggle]')?.addEventListener('click', () => {
@@ -1044,13 +1031,21 @@ function applyItem(id) {
     case 'neon_style': state.style = 'neon'; document.getElementById('wheelStyle').value = 'neon'; drawWheel(); break;
     case 'pastel_style': state.style = 'pastel'; document.getElementById('wheelStyle').value = 'pastel'; drawWheel(); break;
     case 'mono_style': state.style = 'mono'; document.getElementById('wheelStyle').value = 'mono'; drawWheel(); break;
+    case 'extra_theme':
+      document.body.classList.add('rainbow-theme');
+      break;
+    case 'rainbow_rivets':
+      state.rainbowRivets = true;
+      drawWheel();
+      break;
     case 'golden_pointer':
       document.querySelector('.pointer-body').style.background = 'radial-gradient(circle at 35% 30%, #fff, #ffd166)';
       document.querySelector('.pointer-tip').style.borderTopColor = '#ffd166';
       break;
-    case 'golden_frame': document.querySelector('.wheel-wrap').style.filter = 'drop-shadow(0 0 30px #ffd166)'; break;
-    case 'thunder_skin': document.querySelector('.wheel-wrap').style.filter = 'drop-shadow(0 0 20px #7ce4ff)'; break;
-    case 'extra_theme': break;
+    case 'golden_frame':
+    case 'thunder_skin':
+      updateWheelFilter();
+      break;
   }
 }
 
@@ -1063,12 +1058,30 @@ function removeItem(id) {
         drawWheel();
       }
       break;
+    case 'extra_theme':
+      document.body.classList.remove('rainbow-theme');
+      break;
+    case 'rainbow_rivets':
+      state.rainbowRivets = false;
+      drawWheel();
+      break;
     case 'golden_pointer':
       document.querySelector('.pointer-body').style.background = 'radial-gradient(circle at 35% 30%, #fff, #ffd166)';
       document.querySelector('.pointer-tip').style.borderTopColor = '#ffd166';
       break;
-    case 'golden_frame': case 'thunder_skin': document.querySelector('.wheel-wrap').style.filter = ''; break;
+    case 'golden_frame':
+    case 'thunder_skin':
+      updateWheelFilter();
+      break;
   }
+}
+
+/* ⭐ ФИКС: комбинирование filter */
+function updateWheelFilter() {
+  const filters = [];
+  if (isApplied('golden_frame')) filters.push('drop-shadow(0 0 30px #ffd166)');
+  if (isApplied('thunder_skin')) filters.push('drop-shadow(0 0 20px #7ce4ff)');
+  document.querySelector('.wheel-wrap').style.filter = filters.join(' ');
 }
 
 document.getElementById('shopBtn').addEventListener('click', () => {
@@ -1080,7 +1093,7 @@ document.getElementById('shopBtn').addEventListener('click', () => {
 document.getElementById('shopClose').addEventListener('click', () => shopModal.classList.remove('open'));
 shopModal.addEventListener('click', (e) => { if (e.target === shopModal) shopModal.classList.remove('open'); });
 
-/* ============ СЮРПРИЗ ============ */
+/* Сюрприз */
 const surpriseOverlay = document.getElementById('surpriseOverlay');
 function triggerSurprise() {
   if (state.surpriseActive) return;
@@ -1110,7 +1123,7 @@ function scheduleSurprise() {
   }, delay);
 }
 
-/* ============ НАСТРОЙКИ ============ */
+/* Настройки */
 document.getElementById('speed').addEventListener('input', e => { state.speed = +e.target.value; document.getElementById('speedVal').textContent = state.speed; saveState(); });
 document.getElementById('duration').addEventListener('input', e => { state.duration = +e.target.value; document.getElementById('durationVal').textContent = state.duration + 'с'; saveState(); });
 document.getElementById('direction').addEventListener('change', e => { state.direction = e.target.value; saveState(); });
@@ -1152,7 +1165,7 @@ gearBtn.addEventListener('click', () => { if (state.spinning) return; gearPanel.
 document.getElementById('gearClose').addEventListener('click', () => { gearPanel.classList.remove('open'); gearBtn.classList.remove('open'); });
 
 function exportProgress() {
-  const blob = new Blob([JSON.stringify({ version: '7.0', state: JSON.parse(localStorage.getItem(SAVE_KEY) || '{}') }, null, 2)], { type: 'application/json' });
+  const blob = new Blob([JSON.stringify({ version: '7.1', state: JSON.parse(localStorage.getItem(SAVE_KEY) || '{}') }, null, 2)], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url; a.download = `wheel-progress-${Date.now()}.json`; a.click();
@@ -1174,7 +1187,7 @@ document.getElementById('exportBtn').addEventListener('click', exportProgress);
 document.getElementById('importBtn').addEventListener('click', () => document.getElementById('importFile').click());
 document.getElementById('importFile').addEventListener('change', e => { if (e.target.files[0]) importProgress(e.target.files[0]); e.target.value = ''; });
 
-/* ============ PIN ============ */
+/* PIN */
 const pinModal = document.getElementById('pinModal');
 const pinInput = document.getElementById('pinInput');
 const pinError = document.getElementById('pinError');
@@ -1404,13 +1417,16 @@ document.getElementById('adminLogout').addEventListener('click', () => {
   state.adminUnlockedUntil = 0; secretPanel.classList.remove('open'); alert('Выход');
 });
 
-/* ============ МИНИ-ИГРЫ ============ */
+/* ============ МИНИ-ИГРЫ (исправлены) ============ */
 
-/* Кубик — три варианта */
+let dicePlaying = false;
+let guessPlaying = false;
+let rocketPlaying = false;
+
+/* Кубик */
 const diceDisplay = document.getElementById('diceDisplay');
 const diceResult = document.getElementById('diceResult');
 const diceFaces = ['⚀','⚁','⚂','⚃','⚄','⚅'];
-let dicePlaying = false;
 
 document.getElementById('diceLow').addEventListener('click', () => playDice('low'));
 document.getElementById('diceFour').addEventListener('click', () => playDice('four'));
@@ -1421,8 +1437,8 @@ function playDice(bet) {
   const amount = parseInt(document.getElementById('diceBet').value) || 0;
   if (amount < 10) { diceResult.textContent = 'Мин. ставка 10🪙'; diceResult.className = 'game-result lose'; return; }
   if (state.balance < amount) { diceResult.textContent = 'Недостаточно монет'; diceResult.className = 'game-result lose'; return; }
-
   if (!spendBalance(amount)) return;
+
   dicePlaying = true;
   diceResult.textContent = '';
   diceDisplay.classList.add('rolling');
@@ -1474,10 +1490,9 @@ function playDice(bet) {
   }, 60);
 }
 
-/* Угадай число */
+/* Угадай */
 const guessGrid = document.getElementById('guessGrid');
 const guessResult = document.getElementById('guessResult');
-let guessPlaying = false;
 
 function buildGuessGrid() {
   guessGrid.innerHTML = '';
@@ -1495,8 +1510,8 @@ function playGuess(num) {
   const amount = parseInt(document.getElementById('guessBet').value) || 0;
   if (amount < 10) { guessResult.textContent = 'Мин. ставка 10🪙'; guessResult.className = 'game-result lose'; return; }
   if (state.balance < amount) { guessResult.textContent = 'Недостаточно монет'; guessResult.className = 'game-result lose'; return; }
-
   if (!spendBalance(amount)) return;
+
   guessPlaying = true;
   guessResult.textContent = '';
   document.querySelectorAll('.guess-btn').forEach(b => b.disabled = true);
@@ -1512,8 +1527,8 @@ function playGuess(num) {
 
   const win = secret === num;
   const allBtns = guessGrid.querySelectorAll('.guess-btn');
-  allBtns[secret - 1].classList.add('correct');
-  if (!win) allBtns[num - 1].classList.add('wrong');
+  if (allBtns[secret - 1]) allBtns[secret - 1].classList.add('correct');
+  if (!win && allBtns[num - 1]) allBtns[num - 1].classList.add('wrong');
 
   if (win) {
     const payout = amount * 8;
@@ -1535,19 +1550,18 @@ function playGuess(num) {
   }, 2500);
 }
 
-/* Ракета */
+/* Ракета — ⭐ ФИКС: шаговая анимация, всегда ~2.4с */
 const rocketMult = document.getElementById('rocketMult');
 const rocketEl = document.getElementById('rocket');
 const rocketResult = document.getElementById('rocketResult');
-let rocketPlaying = false;
 
 function playRocket(targetMult) {
   if (rocketPlaying) return;
   const amount = parseInt(document.getElementById('rocketBet').value) || 0;
   if (amount < 10) { rocketResult.textContent = 'Мин. ставка 10🪙'; rocketResult.className = 'game-result lose'; return; }
   if (state.balance < amount) { rocketResult.textContent = 'Недостаточно монет'; rocketResult.className = 'game-result lose'; return; }
-
   if (!spendBalance(amount)) return;
+
   rocketPlaying = true;
   rocketResult.textContent = '';
   rocketMult.classList.remove('exploded');
@@ -1565,19 +1579,19 @@ function playRocket(targetMult) {
   else if (rig === 'lose') willWin = false;
   else willWin = Math.random() < chance;
 
-  const maxMult = willWin
-    ? targetMult + Math.random() * targetMult * 0.5
-    : 1 + Math.random() * (targetMult - 1);
+  // ⭐ ФИКС: на выигрыш ракета долетает ровно до targetMult
+  const maxMult = willWin ? targetMult : 1 + Math.random() * (targetMult - 1);
+  const totalSteps = 40;
+  const stepMs = 60;
+  let step = 0;
 
-  let currentMult = 1;
-  const speed = 0.04;
   const interval = setInterval(() => {
-    currentMult += speed;
+    step++;
+    const currentMult = 1 + (maxMult - 1) * (step / totalSteps);
     rocketMult.textContent = '×' + currentMult.toFixed(2);
-    const progress = Math.min(1, currentMult / maxMult);
-    rocketEl.style.left = (progress * 100) + '%';
+    rocketEl.style.left = ((step / totalSteps) * 100) + '%';
 
-    if (currentMult >= maxMult) {
+    if (step >= totalSteps) {
       clearInterval(interval);
 
       if (willWin) {
@@ -1590,7 +1604,7 @@ function playRocket(targetMult) {
         burstParticles('#ffd166', 30);
         if (targetMult >= 10) triggerLightning();
       } else {
-        rocketMult.textContent = '💥 ВЗРЫВ ×' + currentMult.toFixed(2);
+        rocketMult.textContent = '💥 ВЗРЫВ ×' + maxMult.toFixed(2);
         rocketMult.classList.add('exploded');
         rocketEl.classList.add('exploding');
         rocketEl.style.opacity = '0';
@@ -1603,7 +1617,7 @@ function playRocket(targetMult) {
       document.querySelectorAll('.rocket-target').forEach(b => b.disabled = false);
       saveState();
     }
-  }, 50);
+  }, stepMs);
 }
 
 document.querySelectorAll('.rocket-target').forEach(btn => {
@@ -1658,7 +1672,10 @@ document.getElementById('gameDiceRig').value = state.gameRigs.dice;
 document.getElementById('gameGuessRig').value = state.gameRigs.guess;
 document.getElementById('gameRocketRig').value = state.gameRigs.rocket;
 
-state.applied.forEach(id => applyItem(id));
+// Применяем активные предметы
+state.applied.forEach(id => {
+  try { applyItem(id); } catch(e) { console.warn('applyItem failed:', id, e); }
+});
 
 scheduleSurprise();
 window.addEventListener('beforeunload', saveState);
