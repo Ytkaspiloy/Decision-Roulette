@@ -8,7 +8,6 @@
 </head>
 <body>
 
-<!-- ===================== ЭФФЕКТЫ ===================== -->
 <div class="lightning-overlay" id="lightningOverlay">
   <svg class="lightning-svg" viewBox="0 0 400 800" preserveAspectRatio="none">
     <path class="bolt bolt-1" d="M200,0 L160,300 L220,320 L140,620 L200,640 L120,800" />
@@ -21,8 +20,7 @@
   <div class="logo" id="logo">🎡</div>
   <h1>Колесо Фортуны <span class="pro">PRO</span></h1>
   <p class="subtitle">Профессиональный рандомайзер решений</p>
-
-  <div class="wallet" id="wallet">
+  <div class="wallet">
     <span class="coin">🪙</span>
     <span class="balance" id="balance">0</span>
     <button class="wallet-btn" id="shopBtn" title="Магазин">🛒</button>
@@ -46,14 +44,25 @@
     <span class="result-placeholder">Нажми «Крутить», чтобы начать</span>
   </div>
 
-  <div class="wheel-tabs">
+  <div class="wheel-tabs" id="wheelTabs">
     <button class="tab active" data-wheel="main">🎯 Основное</button>
     <button class="tab" data-wheel="daily">🎁 Ежедневное <span class="tab-badge" id="dailyBadge">!</span></button>
-    <button class="tab tab-private" data-wheel="binary">⚡ Бинарное <span class="private-mark">🔒</span></button>
-    <button class="tab tab-private" data-wheel="jackpot">💎 Джекпот <span class="private-mark">🔒</span></button>
-    <button class="tab tab-private" data-wheel="risk">🎰 Риск-казино <span class="private-mark">🔒</span></button>
+    <button class="tab tab-private" data-wheel="binary">⚡ Бинарное</button>
+    <button class="tab tab-private" data-wheel="jackpot">💎 Джекпот</button>
+    <button class="tab tab-private" data-wheel="risk">🎰 Риск-казино</button>
+    <button class="tab tab-private" data-wheel="whale">🐋 Для китов</button>
+    <button class="tab tab-private" data-wheel="legend">🌟 Легенда</button>
   </div>
 
+  <!-- Вкладка мини-игр -->
+  <div class="game-tabs">
+    <button class="game-tab active" data-game="wheel">🎡 Колёса</button>
+    <button class="game-tab" data-game="dice">🎲 Кубик</button>
+    <button class="game-tab" data-game="guess">🔢 Угадай</button>
+    <button class="game-tab" data-game="rocket">🚀 Ракета</button>
+  </div>
+
+  <!-- Настройки для основного колеса -->
   <section class="settings-under" id="mainSettings">
     <div class="settings-card">
       <h3>⚡ Вращение</h3>
@@ -82,13 +91,13 @@
     </div>
 
     <div class="settings-card">
-      <h3>🎨 Пресеты колёс</h3>
+      <h3>🎨 Пресеты</h3>
       <div class="presets" id="presets"></div>
     </div>
 
     <div class="settings-card wide">
       <div class="editor-head">
-        <h3>✏️ Варианты выпадения <span class="counter" id="optCounter">6</span></h3>
+        <h3>✏️ Варианты <span class="counter" id="optCounter">6</span></h3>
         <div class="editor-actions">
           <button class="btn small add" id="addOption">+ Добавить</button>
           <button class="btn small ghost" id="resetOptions">↺ Сброс</button>
@@ -98,24 +107,87 @@
     </div>
   </section>
 
+  <!-- Настройки ежедневного -->
   <section class="settings-under hidden" id="dailySettings">
     <div class="settings-card wide daily-info">
       <h3>🎁 Ежедневное колесо</h3>
-      <p class="daily-desc">Один бесплатный прокрут в день. Улучшенные призы — монеты 🪙 и бонусы.</p>
-      <p class="daily-timer">Следующий прокрут через <b id="dailyTimer">—</b></p>
+      <p class="daily-desc">Один бесплатный прокрут в день. Улучшенные призы.</p>
+      <p class="daily-timer">Следующий через <b id="dailyTimer">—</b></p>
     </div>
     <div class="settings-card wide">
-      <h3>💰 Содержимое ежедневного колеса</h3>
+      <h3>💰 Содержимое</h3>
       <div id="dailyList" class="options-list"></div>
     </div>
   </section>
 
-  <!-- Приватные колёса: только описание -->
+  <!-- Информация о приватных колёсах -->
   <section class="settings-under hidden" id="privateSettings">
     <div class="settings-card wide private-info">
       <h3 id="privateTitle">🔒 Приватное колесо</h3>
       <p class="private-desc" id="privateDesc"></p>
-      <p class="private-hint">⚙️ Состав этого колеса нельзя изменить. Только крутить.</p>
+      <p class="private-hint" id="privateCost">Стоимость прокрута: <b>0 🪙</b></p>
+    </div>
+  </section>
+
+  <!-- МИНИ-ИГРЫ -->
+  <section class="minigame hidden" id="gameDice">
+    <div class="game-card">
+      <h3>🎲 Кубик</h3>
+      <p class="game-desc">Угадай, выпадет больше или меньше 4. Выиграешь — ×2. Проиграешь — потеряешь ставку.</p>
+      <div class="game-bet">
+        <span>Ставка:</span>
+        <input type="number" id="diceBet" value="50" min="10" class="modal-input" style="width:100px;">
+        <span>🪙</span>
+      </div>
+      <div class="dice-display" id="diceDisplay">🎲</div>
+      <div class="game-actions">
+        <button class="btn add" id="diceLow">⬇ Меньше 4 (×1.9)</button>
+        <button class="btn add" id="diceHigh">⬆ Больше 4 (×1.9)</button>
+      </div>
+      <p class="game-result" id="diceResult"></p>
+    </div>
+  </section>
+
+  <section class="minigame hidden" id="gameGuess">
+    <div class="game-card">
+      <h3>🔢 Угадай число</h3>
+      <p class="game-desc">Угадай число от 1 до 10. Угадаешь — ×8 к ставке!</p>
+      <div class="game-bet">
+        <span>Ставка:</span>
+        <input type="number" id="guessBet" value="50" min="10" class="modal-input" style="width:100px;">
+        <span>🪙</span>
+      </div>
+      <div class="guess-grid" id="guessGrid"></div>
+      <p class="game-result" id="guessResult"></p>
+    </div>
+  </section>
+
+  <section class="minigame hidden" id="gameRocket">
+    <div class="game-card">
+      <h3>🚀 Ракета</h3>
+      <p class="game-desc">Поставь сумму и выбери множитель. Ракета взлетает — если пролетит выбранный множитель, получаешь ×N. Если взорвётся раньше — теряешь ставку. Шанс падает с ростом множителя.</p>
+      <div class="game-bet">
+        <span>Ставка:</span>
+        <input type="number" id="rocketBet" value="50" min="10" class="modal-input" style="width:100px;">
+        <span>🪙</span>
+      </div>
+      <div class="rocket-display">
+        <div class="rocket-mult" id="rocketMult">×1.00</div>
+        <div class="rocket-stage">
+          <div class="rocket-track">
+            <div class="rocket" id="rocket">🚀</div>
+          </div>
+        </div>
+      </div>
+      <div class="rocket-targets" id="rocketTargets">
+        <button class="rocket-target" data-mult="1.5">×1.5 <small>80%</small></button>
+        <button class="rocket-target" data-mult="2">×2 <small>60%</small></button>
+        <button class="rocket-target" data-mult="3">×3 <small>40%</small></button>
+        <button class="rocket-target" data-mult="5">×5 <small>20%</small></button>
+        <button class="rocket-target" data-mult="10">×10 <small>8%</small></button>
+        <button class="rocket-target" data-mult="25">×25 <small>3%</small></button>
+      </div>
+      <p class="game-result" id="rocketResult"></p>
     </div>
   </section>
 </main>
@@ -152,8 +224,8 @@
   <hr style="border:none;border-top:1px solid rgba(255,255,255,.1);margin:14px 0;">
 
   <label class="panel-label">💾 Данные</label>
-  <button class="btn small ghost" id="exportBtn" style="width:100%;margin-bottom:6px;">📤 Экспорт прогресса</button>
-  <button class="btn small ghost" id="importBtn" style="width:100%;">📥 Импорт прогресса</button>
+  <button class="btn small ghost" id="exportBtn" style="width:100%;margin-bottom:6px;">📤 Экспорт</button>
+  <button class="btn small ghost" id="importBtn" style="width:100%;">📥 Импорт</button>
   <input type="file" id="importFile" accept=".json" style="display:none;">
 </div>
 
@@ -182,11 +254,11 @@
       <h3>🎨 Настройка сектора</h3>
       <button class="panel-close" id="sectorClose">✕</button>
     </div>
-    <label class="panel-label">Текст сектора</label>
+    <label class="panel-label">Текст</label>
     <input type="text" id="sectorText" class="modal-input" maxlength="24">
     <label class="panel-label">Цвет</label>
     <input type="color" id="sectorColor" class="modal-color">
-    <label class="panel-label">Звук выпадения</label>
+    <label class="panel-label">Звук</label>
     <select id="sectorSound">
       <option value="fanfare">🎺 Фанфары</option>
       <option value="coin">🪙 Монеты</option>
@@ -195,9 +267,9 @@
       <option value="buzz">😵 Проигрыш</option>
       <option value="chime">🔔 Колокольчик</option>
       <option value="laser">⚡ Лазер</option>
-      <option value="thunder">⛈️ Гром (редкий)</option>
+      <option value="thunder">⛈️ Гром</option>
     </select>
-    <label class="panel-label">Анимация выпадения</label>
+    <label class="panel-label">Анимация</label>
     <select id="sectorAnim">
       <option value="pop">🎈 Pop</option>
       <option value="shake">🫨 Shake</option>
@@ -205,12 +277,12 @@
       <option value="spin">🌀 Spin</option>
       <option value="glow">💡 Glow</option>
       <option value="lightning">⚡ Молния</option>
-      <option value="none">❌ Без анимации</option>
+      <option value="none">❌ Нет</option>
     </select>
     <label class="toggle" style="margin-top:12px;">
       <input type="checkbox" id="sectorRare">
       <span class="toggle-box"></span>
-      <span>⭐ Редкий сектор (молния + гром)</span>
+      <span>⭐ Редкий (молния + гром)</span>
     </label>
     <div class="modal-actions">
       <button class="btn add" id="sectorSave">💾 Сохранить</button>
@@ -224,7 +296,7 @@
   <div class="surprise-box">
     <div class="surprise-icon">🎁</div>
     <h2>Сюрприз!</h2>
-    <p class="surprise-text" id="surpriseText">Нажми, чтобы получить награду</p>
+    <p class="surprise-text" id="surpriseText">Забери награду</p>
     <button class="btn add" id="surpriseClaim" style="font-size:1.1rem;padding:14px 32px;">Забрать 🎉</button>
   </div>
 </div>
@@ -233,9 +305,9 @@
 <div class="modal-overlay" id="pinModal">
   <div class="modal" style="max-width:340px;text-align:center;">
     <div class="panel-head" style="justify-content:center;">
-      <h3>🔐 Вход в админку</h3>
+      <h3>🔐 Вход</h3>
     </div>
-    <p class="panel-hint" style="text-align:center;margin:8px 0 16px;">Введите PIN-код</p>
+    <p class="panel-hint" style="text-align:center;margin:8px 0 16px;">PIN-код</p>
     <input type="password" id="pinInput" class="modal-input" maxlength="8"
            style="text-align:center;font-size:1.6rem;letter-spacing:8px;padding:14px;"
            inputmode="numeric" autocomplete="off">
@@ -259,11 +331,11 @@
     <button class="admin-tab" data-atab="wallet">💰</button>
     <button class="admin-tab" data-atab="daily">🎁</button>
     <button class="admin-tab" data-atab="private">🎰</button>
+    <button class="admin-tab" data-atab="games">🎮</button>
     <button class="admin-tab" data-atab="stats">📊</button>
     <button class="admin-tab" data-atab="system">⚙️</button>
   </div>
 
-  <!-- Подкрутка + смещение -->
   <div class="admin-content active" data-acontent="main">
     <label class="panel-label">Режим:</label>
     <select id="rigMode">
@@ -281,11 +353,11 @@
       <option value="0.25">25%</option>
     </select>
     <div class="secret-status off" id="secretStatus">Честный режим</div>
-    <button class="btn small danger" id="clearRig" style="width:100%;margin-top:10px;">Сбросить подкрутку</button>
+    <button class="btn small danger" id="clearRig" style="width:100%;margin-top:10px;">Сбросить</button>
 
     <hr style="border:none;border-top:1px solid rgba(255,255,255,.1);margin:14px 0;">
 
-    <label class="panel-label">🎯 Смещение остановки от центра</label>
+    <label class="panel-label">🎯 Смещение от центра</label>
     <div class="setting-row">
       <input type="range" id="offsetRange" min="0" max="90" value="35" style="flex:1;">
       <span class="value-badge" id="offsetVal">35%</span>
@@ -293,12 +365,10 @@
     <label class="toggle" style="margin-top:8px;">
       <input type="checkbox" id="offsetDisabled">
       <span class="toggle-box"></span>
-      <span>Отключить смещение (всегда центр)</span>
+      <span>Отключить (всегда центр)</span>
     </label>
-    <p class="panel-hint">Если включено — стрелка всегда попадает точно в центр сектора.</p>
   </div>
 
-  <!-- Экономика -->
   <div class="admin-content" data-acontent="wallet">
     <label class="panel-label">Установить баланс</label>
     <div style="display:flex;gap:6px;">
@@ -307,69 +377,87 @@
     </div>
     <label class="panel-label">Быстрые действия</label>
     <div class="admin-grid-2">
-      <button class="btn small" data-give="100">+100 🪙</button>
-      <button class="btn small" data-give="500">+500 🪙</button>
-      <button class="btn small" data-give="1000">+1000 🪙</button>
-      <button class="btn small" data-give="10000">+10000 🪙</button>
-      <button class="btn small danger" data-give="-500">−500 🪙</button>
-      <button class="btn small danger" data-give="-1000">−1000 🪙</button>
+      <button class="btn small" data-give="100">+100</button>
+      <button class="btn small" data-give="1000">+1000</button>
+      <button class="btn small" data-give="10000">+10000</button>
+      <button class="btn small" data-give="100000">+100K</button>
+      <button class="btn small danger" data-give="-500">−500</button>
+      <button class="btn small danger" data-give="-1000">−1000</button>
     </div>
-    <label class="panel-label">Разблокировать всё</label>
-    <button class="btn small add" id="adminUnlockAll" style="width:100%;">🔓 Разблокировать магазин</button>
-    <label class="panel-label">Сбросить покупки</label>
-    <button class="btn small danger" id="adminResetShop" style="width:100%;">Сбросить магазин</button>
+    <label class="panel-label">Магазин</label>
+    <button class="btn small add" id="adminUnlockAll" style="width:100%;margin-bottom:6px;">🔓 Открыть всё</button>
+    <button class="btn small danger" id="adminResetShop" style="width:100%;">Сбросить покупки</button>
   </div>
 
-  <!-- Ежедневное -->
   <div class="admin-content" data-acontent="daily">
-    <label class="panel-label">Сбросить кулдаун</label>
-    <button class="btn small add" id="adminResetDaily" style="width:100%;">Сбросить ежедневный</button>
-    <label class="panel-label">Запустить сюрприз</label>
+    <button class="btn small add" id="adminResetDaily" style="width:100%;margin-bottom:8px;">Сбросить кулдаун</button>
     <button class="btn small" id="adminSurprise" style="width:100%;background:linear-gradient(135deg,#f59e0b,#ef4444);">🎁 Сюрприз</button>
-    <label class="panel-label">Редактировать ежедневные призы</label>
+    <label class="panel-label" style="margin-top:12px;">Редактировать призы</label>
     <div id="adminDailyList" class="admin-daily-list"></div>
-    <button class="btn small add" id="adminDailyAdd" style="width:100%;margin-top:8px;">+ Добавить приз</button>
+    <button class="btn small add" id="adminDailyAdd" style="width:100%;margin-top:8px;">+ Добавить</button>
   </div>
 
-  <!-- Приватные колёса -->
   <div class="admin-content" data-acontent="private">
-    <p class="panel-hint">Приватные колёса нельзя изменить — только включить/выключить отображение во вкладках.</p>
-
-    <label class="panel-label">⚡ Бинарное колесо</label>
-    <label class="toggle">
+    <p class="panel-hint">Видимость приватных колёс:</p>
+    <label class="toggle" style="margin-bottom:6px;">
       <input type="checkbox" id="privateBinary" checked>
       <span class="toggle-box"></span>
-      <span>Показывать вкладку</span>
+      <span>⚡ Бинарное</span>
     </label>
-    <p class="panel-hint">Удвоение / сохранение / полное обнуление баланса.</p>
-
-    <label class="panel-label">💎 Джекпот-рулетка</label>
-    <label class="toggle">
+    <label class="toggle" style="margin-bottom:6px;">
       <input type="checkbox" id="privateJackpot" checked>
       <span class="toggle-box"></span>
-      <span>Показывать вкладку</span>
+      <span>💎 Джекпот</span>
     </label>
-    <p class="panel-hint">Редкие джекпоты: ×2, ×5, ×10 к балансу.</p>
-
-    <label class="panel-label">🎰 Риск-казино</label>
-    <label class="toggle">
+    <label class="toggle" style="margin-bottom:6px;">
       <input type="checkbox" id="privateRisk" checked>
       <span class="toggle-box"></span>
-      <span>Показывать вкладку</span>
+      <span>🎰 Риск-казино</span>
     </label>
-    <p class="panel-hint">Ставка 50/50 с шансом ×3.</p>
+    <label class="toggle" style="margin-bottom:6px;">
+      <input type="checkbox" id="privateWhale" checked>
+      <span class="toggle-box"></span>
+      <span>🐋 Для китов</span>
+    </label>
+    <label class="toggle" style="margin-bottom:6px;">
+      <input type="checkbox" id="privateLegend" checked>
+      <span class="toggle-box"></span>
+      <span>🌟 Легенда</span>
+    </label>
 
-    <hr style="border:none;border-top:1px solid rgba(255,255,255,.1);margin:14px 0;">
-
-    <label class="panel-label">🎬 Принудительный результат для приватных</label>
+    <label class="panel-label" style="margin-top:12px;">Принудительный результат</label>
     <select id="privateRig">
       <option value="fair">🎲 Честный</option>
-      <option value="win">🎉 Всегда выигрыш</option>
-      <option value="lose">💀 Всегда проигрыш</option>
+      <option value="win">🎉 Выигрыш</option>
+      <option value="lose">💀 Проигрыш</option>
     </select>
   </div>
 
-  <!-- Статистика -->
+  <div class="admin-content" data-acontent="games">
+    <p class="panel-hint">Подкрутка мини-игр:</p>
+
+    <label class="panel-label">🎲 Кубик</label>
+    <select id="gameDiceRig">
+      <option value="fair">Честный</option>
+      <option value="win">Всегда выигрыш</option>
+      <option value="lose">Всегда проигрыш</option>
+    </select>
+
+    <label class="panel-label">🔢 Угадай число</label>
+    <select id="gameGuessRig">
+      <option value="fair">Честный</option>
+      <option value="win">Всегда угадывает</option>
+      <option value="lose">Никогда не угадывает</option>
+    </select>
+
+    <label class="panel-label">🚀 Ракета</label>
+    <select id="gameRocketRig">
+      <option value="fair">Честный</option>
+      <option value="win">Всегда долетает</option>
+      <option value="lose">Всегда взрывается</option>
+    </select>
+  </div>
+
   <div class="admin-content" data-acontent="stats">
     <div class="stats-grid">
       <div class="stat-card"><div class="stat-value" id="statSpins">0</div><div class="stat-label">Прокрутов</div></div>
@@ -381,10 +469,9 @@
     </div>
     <label class="panel-label" style="margin-top:12px;">Топ выпадений</label>
     <div id="adminTopResults" class="admin-top-results"></div>
-    <button class="btn small danger" id="adminResetStats" style="width:100%;margin-top:10px;">Сбросить статистику</button>
+    <button class="btn small danger" id="adminResetStats" style="width:100%;margin-top:10px;">Сбросить</button>
   </div>
 
-  <!-- Система -->
   <div class="admin-content" data-acontent="system">
     <label class="panel-label">Сменить PIN</label>
     <div style="display:flex;gap:6px;">
@@ -396,7 +483,7 @@
     <button class="btn small ghost" id="adminExport" style="width:100%;margin-bottom:6px;">📤 Экспорт</button>
     <button class="btn small ghost" id="adminImport" style="width:100%;">📥 Импорт</button>
     <input type="file" id="adminImportFile" accept=".json" style="display:none;">
-    <label class="panel-label" style="color:#f87171;margin-top:14px;">⚠️ Опасная зона</label>
+    <label class="panel-label" style="color:#f87171;margin-top:14px;">⚠️ Опасное</label>
     <button class="btn small danger" id="adminHardReset" style="width:100%;">🗑️ Полный сброс</button>
     <button class="btn small danger" id="adminLogout" style="width:100%;margin-top:6px;">🚪 Выйти</button>
   </div>
