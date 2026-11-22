@@ -10,7 +10,6 @@
   --input-bg: #1c1533; --input-border: #3d2f66;
 }
 
-/* Темы */
 body[data-theme="dark"] {
   --bg-1: #0a0618; --bg-2: #1a1035;
   --accent-1: #ffd166; --accent-2: #ff6b9d; --accent-3: #7ce4ff;
@@ -67,6 +66,27 @@ body {
   transition: background .4s;
 }
 .hidden { display: none !important; }
+
+/* ⭐ КРИТИЧЕСКИЙ ФИКС: игры видны, а элементы колеса скрыты в game-mode */
+body.game-mode .wheel-wrap,
+body.game-mode .result-box,
+body.game-mode .wheel-tabs,
+body.game-mode #mainSettings,
+body.game-mode #dailySettings,
+body.game-mode #privateSettings {
+  display: none !important;
+}
+
+/* Rainbow theme (extra_theme) */
+body.rainbow-theme {
+  background: linear-gradient(45deg, #ff0080, #ff8c00, #ffd700, #00ff7f, #00bfff, #8a2be2) !important;
+  background-size: 400% 400% !important;
+  animation: rainbowShift 10s ease infinite !important;
+}
+@keyframes rainbowShift {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
 
 .lightning-overlay { position: fixed; inset: 0; z-index: 999; pointer-events: none; opacity: 0; }
 .lightning-overlay.active { opacity: 1; }
@@ -329,7 +349,7 @@ body[data-theme="light"] .toggle-box { background: rgba(0,0,0,.15); }
 .rocket-mult.exploded { color: #ef4444; text-shadow: 0 0 20px #ef4444; }
 .rocket-stage { height: 80px; position: relative; overflow: hidden; background: linear-gradient(to right, rgba(124, 228, 255, .05), rgba(255, 107, 157, .05)); border-radius: 12px; border: 1px solid var(--panel-border); }
 .rocket-track { position: absolute; top: 50%; left: 0; right: 0; height: 2px; background: rgba(255,255,255,.2); }
-.rocket { position: absolute; top: 50%; left: 0; transform: translate(-50%, -50%); font-size: 2rem; transition: left .1s linear; filter: drop-shadow(0 0 8px var(--accent-1)); }
+.rocket { position: absolute; top: 50%; left: 0; transform: translate(-50%, -50%); font-size: 2rem; transition: left .06s linear; filter: drop-shadow(0 0 8px var(--accent-1)); }
 .rocket.exploding { animation: rocketExplode .6s ease-out; }
 @keyframes rocketExplode { 0% { transform: translate(-50%, -50%) scale(1); opacity: 1; } 50% { transform: translate(-50%, -50%) scale(2); opacity: .8; filter: drop-shadow(0 0 20px #ef4444); } 100% { transform: translate(-50%, -50%) scale(3); opacity: 0; } }
 .rocket-targets { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin: 16px 0; }
