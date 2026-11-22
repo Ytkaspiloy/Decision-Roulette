@@ -50,11 +50,10 @@
     <button class="tab tab-private" data-wheel="binary">⚡ Бинарное</button>
     <button class="tab tab-private" data-wheel="jackpot">💎 Джекпот</button>
     <button class="tab tab-private" data-wheel="risk">🎰 Риск-казино</button>
-    <button class="tab tab-private" data-wheel="whale">🐋 Для китов</button>
+    <button class="tab tab-private" data-wheel="whale">🐋 Киты</button>
     <button class="tab tab-private" data-wheel="legend">🌟 Легенда</button>
   </div>
 
-  <!-- Вкладка мини-игр -->
   <div class="game-tabs">
     <button class="game-tab active" data-game="wheel">🎡 Колёса</button>
     <button class="game-tab" data-game="dice">🎲 Кубик</button>
@@ -62,7 +61,6 @@
     <button class="game-tab" data-game="rocket">🚀 Ракета</button>
   </div>
 
-  <!-- Настройки для основного колеса -->
   <section class="settings-under" id="mainSettings">
     <div class="settings-card">
       <h3>⚡ Вращение</h3>
@@ -107,7 +105,6 @@
     </div>
   </section>
 
-  <!-- Настройки ежедневного -->
   <section class="settings-under hidden" id="dailySettings">
     <div class="settings-card wide daily-info">
       <h3>🎁 Ежедневное колесо</h3>
@@ -120,20 +117,19 @@
     </div>
   </section>
 
-  <!-- Информация о приватных колёсах -->
   <section class="settings-under hidden" id="privateSettings">
     <div class="settings-card wide private-info">
       <h3 id="privateTitle">🔒 Приватное колесо</h3>
       <p class="private-desc" id="privateDesc"></p>
       <p class="private-hint" id="privateCost">Стоимость прокрута: <b>0 🪙</b></p>
+      <div class="private-stats" id="privateStats"></div>
     </div>
   </section>
 
-  <!-- МИНИ-ИГРЫ -->
   <section class="minigame hidden" id="gameDice">
     <div class="game-card">
       <h3>🎲 Кубик</h3>
-      <p class="game-desc">Угадай, выпадет больше или меньше 4. Выиграешь — ×2. Проиграешь — потеряешь ставку.</p>
+      <p class="game-desc">Угадай, выпадет меньше или больше 4. Выигрыш ×1.9.</p>
       <div class="game-bet">
         <span>Ставка:</span>
         <input type="number" id="diceBet" value="50" min="10" class="modal-input" style="width:100px;">
@@ -151,7 +147,7 @@
   <section class="minigame hidden" id="gameGuess">
     <div class="game-card">
       <h3>🔢 Угадай число</h3>
-      <p class="game-desc">Угадай число от 1 до 10. Угадаешь — ×8 к ставке!</p>
+      <p class="game-desc">Угадай число от 1 до 10. Выигрыш ×8.</p>
       <div class="game-bet">
         <span>Ставка:</span>
         <input type="number" id="guessBet" value="50" min="10" class="modal-input" style="width:100px;">
@@ -165,7 +161,7 @@
   <section class="minigame hidden" id="gameRocket">
     <div class="game-card">
       <h3>🚀 Ракета</h3>
-      <p class="game-desc">Поставь сумму и выбери множитель. Ракета взлетает — если пролетит выбранный множитель, получаешь ×N. Если взорвётся раньше — теряешь ставку. Шанс падает с ростом множителя.</p>
+      <p class="game-desc">Поставь сумму и выбери множитель. Ракета взлетает — если пролетит выбранный множитель, получаешь ×N. Если взорвётся раньше — теряешь ставку.</p>
       <div class="game-bet">
         <span>Ставка:</span>
         <input type="number" id="rocketBet" value="50" min="10" class="modal-input" style="width:100px;">
@@ -192,7 +188,6 @@
   </section>
 </main>
 
-<!-- Шестерёнка -->
 <button class="gear-btn" id="gearBtn" title="Настройки">⚙️</button>
 
 <div class="gear-panel" id="gearPanel">
@@ -229,7 +224,6 @@
   <input type="file" id="importFile" accept=".json" style="display:none;">
 </div>
 
-<!-- Магазин -->
 <div class="modal-overlay" id="shopModal">
   <div class="modal modal-wide">
     <div class="panel-head">
@@ -247,7 +241,6 @@
   </div>
 </div>
 
-<!-- Редактор сектора -->
 <div class="modal-overlay" id="sectorModal">
   <div class="modal">
     <div class="panel-head">
@@ -291,7 +284,6 @@
   </div>
 </div>
 
-<!-- Сюрприз -->
 <div class="surprise-overlay" id="surpriseOverlay">
   <div class="surprise-box">
     <div class="surprise-icon">🎁</div>
@@ -301,7 +293,6 @@
   </div>
 </div>
 
-<!-- PIN -->
 <div class="modal-overlay" id="pinModal">
   <div class="modal" style="max-width:340px;text-align:center;">
     <div class="panel-head" style="justify-content:center;">
@@ -319,7 +310,6 @@
   </div>
 </div>
 
-<!-- Админ-панель -->
 <div class="secret-panel" id="secretPanel">
   <div class="panel-head">
     <h3>🔮 Админ-панель</h3>
@@ -435,21 +425,18 @@
 
   <div class="admin-content" data-acontent="games">
     <p class="panel-hint">Подкрутка мини-игр:</p>
-
     <label class="panel-label">🎲 Кубик</label>
     <select id="gameDiceRig">
       <option value="fair">Честный</option>
       <option value="win">Всегда выигрыш</option>
       <option value="lose">Всегда проигрыш</option>
     </select>
-
     <label class="panel-label">🔢 Угадай число</label>
     <select id="gameGuessRig">
       <option value="fair">Честный</option>
       <option value="win">Всегда угадывает</option>
       <option value="lose">Никогда не угадывает</option>
     </select>
-
     <label class="panel-label">🚀 Ракета</label>
     <select id="gameRocketRig">
       <option value="fair">Честный</option>
